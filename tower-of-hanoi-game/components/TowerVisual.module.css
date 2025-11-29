@@ -1,0 +1,73 @@
+.container {
+    display: flex;
+    gap: 4rem;
+    justify-content: center;
+    margin: 2rem 0;
+    position: relative;
+}
+
+.pegWrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.pegLabel {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.pegColumn {
+    width: 2rem;
+    height: 12rem;
+    background-color: #374151;
+    /* gray-700 */
+    border-radius: 0.25rem;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0.25rem;
+    position: relative;
+}
+
+.pegColumn.dragOver {
+    background-color: #6ee7b7;
+    /* highlight peg on dragOver */
+}
+
+.pegBase {
+    width: 60px;
+    height: 8px;
+    background-color: #111827;
+    /* dark gray */
+    border-radius: 4px;
+    margin-top: 4px;
+}
+
+.disk {
+    height: 1.5rem;
+    margin-bottom: 0.25rem;
+    border-radius: 0.25rem;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    line-height: 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: grab;
+    transition: all 0.2s;
+}
+
+.disk.dragging {
+    opacity: 0.6;
+}
+
+.totalMoves {
+    margin-top: 1.5rem;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.25rem;
+}
