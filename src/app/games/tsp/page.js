@@ -728,7 +728,7 @@ submitAnswer = async () => {
                     ))}
                   </div>
 
-                 // Add this section in the Result Phase of page.js, after the algorithm-details div
+                 {/* // Add this section in the Result Phase of page.js, after the algorithm-details div */}
 
 {currentRoute && (
   <>
