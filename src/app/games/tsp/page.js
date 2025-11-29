@@ -300,95 +300,100 @@ class TSPGame extends Component {
     return { route, distance: minDistance };
   };
 
-  submitAnswer = async () => {
-    try {
-      this.setState({ isLoading: true, error: '' });
+ // Update the submitAnswer method in src/app/games/tsp/page.js
+submitAnswer = async () => {
+  try {
+    this.setState({ isLoading: true, error: '' });
 
-      const { playerAnswer, playerRoute, homeCity, selectedCities, distances, playerName } = this.state;
+    const { playerAnswer, playerRoute, homeCity, selectedCities, distances, playerName } = this.state;
 
-      if (!playerAnswer.trim()) {
-        this.setState({ error: 'Please enter the shortest distance', isLoading: false });
-        return;
-      }
-
-      const distance = parseFloat(playerAnswer);
-      if (isNaN(distance) || distance <= 0) {
-        this.setState({ error: 'Please enter a valid positive number', isLoading: false });
-        return;
-      }
-
-      if (!playerRoute.trim()) {
-        this.setState({ error: 'Please enter the route (e.g., A-B-C-A)', isLoading: false });
-        return;
-      }
-
-      const citiesToVisit = [homeCity, ...selectedCities];
-      const results = [];
-
-      // Algorithm 1: Nearest Neighbor
-      const nn_start = performance.now();
-      const nnResult = this.nearestNeighborAlgorithm(distances, citiesToVisit, homeCity);
-      const nn_end = performance.now();
-      results.push({
-        algorithm: 'Nearest Neighbor (Greedy)',
-        distance: nnResult.distance,
-        route: nnResult.route,
-        routeString: nnResult.route.join(' → '),
-        time: (nn_end - nn_start).toFixed(4),
-        complexity: 'O(n²)',
-        type: 'iterative'
-      });
-
-      // Algorithm 2: Brute Force (only for small sets)
-      if (citiesToVisit.length <= 8) {
-        const bf_start = performance.now();
-        const bfResult = this.bruteForceTSP(distances, citiesToVisit, homeCity);
-        const bf_end = performance.now();
-        results.push({
-          algorithm: 'Brute Force (Recursive)',
-          distance: bfResult.distance,
-          route: bfResult.route,
-          routeString: bfResult.route.join(' → '),
-          time: (bf_end - bf_start).toFixed(4),
-          complexity: 'O(n!)',
-          type: 'recursive'
-        });
-      }
-
-      // Algorithm 3: Dynamic Programming
-      const dp_start = performance.now();
-      const dpResult = this.dynamicProgrammingTSP(distances, citiesToVisit, homeCity);
-      const dp_end = performance.now();
-      results.push({
-        algorithm: 'Dynamic Programming (Held-Karp)',
-        distance: dpResult.distance,
-        route: dpResult.route,
-        routeString: dpResult.route.join(' → '),
-        time: (dp_end - dp_start).toFixed(4),
-        complexity: 'O(n² × 2ⁿ)',
-        type: 'iterative'
-      });
-
-      const optimalDistance = Math.min(...results.map(r => r.distance));
-      const tolerance = 1;
-      
-      const isCorrect = Math.abs(distance - optimalDistance) <= tolerance;
-
-      await this.saveToDatabaseCall(playerName, homeCity, selectedCities, playerRoute, distance, isCorrect, results);
-
-      this.setState({
-        algorithmResults: results,
-        result: isCorrect ? 'win' : 'lose',
-        gameState: 'result',
-        isLoading: false,
-        showRoute: true,
-        currentAlgorithmIndex: 0
-      });
-
-    } catch (err) {
-      this.setState({ error: 'Error: ' + err.message, isLoading: false });
+    if (!playerAnswer.trim()) {
+      this.setState({ error: 'Please enter the shortest distance', isLoading: false });
+      return;
     }
-  };
+
+    const distance = parseFloat(playerAnswer);
+    if (isNaN(distance) || distance <= 0) {
+      this.setState({ error: 'Please enter a valid positive number', isLoading: false });
+      return;
+    }
+
+    if (!playerRoute.trim()) {
+      this.setState({ error: 'Please enter the route (e.g., A-B-C-A)', isLoading: false });
+      return;
+    }
+
+    const citiesToVisit = [homeCity, ...selectedCities];
+    const results = [];
+
+    // Algorithm 1: Nearest Neighbor (Greedy - Iterative)
+    const nn_start = performance.now();
+    const nnResult = this.nearestNeighborAlgorithm(distances, citiesToVisit, homeCity);
+    const nn_end = performance.now();
+    results.push({
+      algorithm: 'Nearest Neighbor (Greedy)',
+      distance: nnResult.distance,
+      route: nnResult.route,
+      routeString: nnResult.route.join(' → '),
+      time: (nn_end - nn_start).toFixed(4),
+      complexity: 'O(n²)',
+      type: 'Iterative',
+      description: 'Greedy heuristic approach - always picks nearest unvisited city'
+    });
+
+    // Algorithm 2: Brute Force (Recursive)
+    // WARNING: This will be VERY slow for more than 10 cities
+    const bf_start = performance.now();
+    const bfResult = this.bruteForceTSP(distances, citiesToVisit, homeCity);
+    const bf_end = performance.now();
+    results.push({
+      algorithm: 'Brute Force (Recursive)',
+      distance: bfResult.distance,
+      route: bfResult.route,
+      routeString: bfResult.route.join(' → '),
+      time: (bf_end - bf_start).toFixed(4),
+      complexity: 'O(n!)',
+      type: 'Recursive',
+      description: 'Exhaustive search - tries all possible permutations recursively'
+    });
+
+    // Algorithm 3: Dynamic Programming (Held-Karp - Iterative)
+    const dp_start = performance.now();
+    const dpResult = this.dynamicProgrammingTSP(distances, citiesToVisit, homeCity);
+    const dp_end = performance.now();
+    results.push({
+      algorithm: 'Dynamic Programming (Held-Karp)',
+      distance: dpResult.distance,
+      route: dpResult.route,
+      routeString: dpResult.route.join(' → '),
+      time: (dp_end - dp_start).toFixed(4),
+      complexity: 'O(n² × 2ⁿ)',
+      type: 'Iterative',
+      description: 'Optimal solution using memoization - stores subproblem results'
+    });
+
+    // Determine optimal distance
+    const optimalDistance = Math.min(...results.map(r => r.distance));
+    const tolerance = 1;
+    
+    const isCorrect = Math.abs(distance - optimalDistance) <= tolerance;
+
+    // Save to database
+    await this.saveToDatabaseCall(playerName, homeCity, selectedCities, playerRoute, distance, isCorrect, results);
+
+    this.setState({
+      algorithmResults: results,
+      result: isCorrect ? 'win' : 'lose',
+      gameState: 'result',
+      isLoading: false,
+      showRoute: true,
+      currentAlgorithmIndex: 0
+    });
+
+  } catch (err) {
+    this.setState({ error: 'Error: ' + err.message, isLoading: false });
+  }
+};
 
   saveToDatabaseCall = async (playerName, homeCity, selectedCities, playerRoute, playerDistance, isCorrect, results) => {
     try {
@@ -723,7 +728,198 @@ class TSPGame extends Component {
                     ))}
                   </div>
 
-                  {currentRoute && (
+                 // Add this section in the Result Phase of page.js, after the algorithm-details div
+
+{currentRoute && (
+  <>
+    <div className="algorithm-details">
+      <h3>{currentRoute.algorithm}</h3>
+      
+      <div className="algorithm-description">
+        <p>{currentRoute.description}</p>
+      </div>
+      
+      <div className="result-stats">
+        <div className="stat-card">
+          <div className="stat-label">Distance</div>
+          <div className="stat-value">{currentRoute.distance} km</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Time</div>
+          <div className="stat-value">{currentRoute.time} ms</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Complexity</div>
+          <div className="stat-value">{currentRoute.complexity}</div>
+        </div>
+      </div>
+
+      <div className="route-display">
+        <strong>Route:</strong>
+        <div className="route-path">{currentRoute.routeString}</div>
+      </div>
+
+      <div className="algorithm-type-badge">
+        {currentRoute.type === 'Recursive' ? '🔄 Recursive Implementation' : '➡️ Iterative Implementation'}
+      </div>
+    </div>
+
+    {/* NEW: Complexity Analysis Section */}
+    <div className="complexity-analysis-section">
+      <h4>🔍 Complexity Analysis</h4>
+      <div className="complexity-grid">
+        <div className="complexity-card">
+          <div className="complexity-title">Time Complexity</div>
+          <div className="complexity-value">{currentRoute.complexity}</div>
+          <div className="complexity-explanation">
+            {currentRoute.algorithm.includes('Nearest') && 
+              'For each city, searches all remaining unvisited cities'}
+            {currentRoute.algorithm.includes('Brute') && 
+              'Generates all (n-1)! permutations of cities to find optimal route'}
+            {currentRoute.algorithm.includes('Dynamic') && 
+              'Uses bitmask (2ⁿ states) and checks n cities for each state'}
+          </div>
+        </div>
+        
+        <div className="complexity-card">
+          <div className="complexity-title">Space Complexity</div>
+          <div className="complexity-value">
+            {currentRoute.algorithm.includes('Nearest') && 'O(n)'}
+            {currentRoute.algorithm.includes('Brute') && 'O(n)'}
+            {currentRoute.algorithm.includes('Dynamic') && 'O(n × 2ⁿ)'}
+          </div>
+          <div className="complexity-explanation">
+            {currentRoute.algorithm.includes('Nearest') && 
+              'Stores only the current route and unvisited set'}
+            {currentRoute.algorithm.includes('Brute') && 
+              'Recursion stack depth is at most n'}
+            {currentRoute.algorithm.includes('Dynamic') && 
+              'Memoization table stores all visited states'}
+          </div>
+        </div>
+
+        <div className="complexity-card">
+          <div className="complexity-title">Optimality</div>
+          <div className="complexity-value">
+            {currentRoute.algorithm.includes('Nearest') && '❌ Approximate'}
+            {currentRoute.algorithm.includes('Brute') && '✅ Optimal'}
+            {currentRoute.algorithm.includes('Dynamic') && '✅ Optimal'}
+          </div>
+          <div className="complexity-explanation">
+            {currentRoute.algorithm.includes('Nearest') && 
+              'Heuristic approach - may not find shortest path'}
+            {currentRoute.algorithm.includes('Brute') && 
+              'Exhaustive search guarantees optimal solution'}
+            {currentRoute.algorithm.includes('Dynamic') && 
+              'Systematic search with memoization guarantees optimality'}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* NEW: Recursive vs Iterative Comparison */}
+    <div className="recursive-iterative-comparison">
+      <h4>🔄 Recursive vs Iterative Comparison</h4>
+      <table className="comparison-simple-table">
+        <thead>
+          <tr>
+            <th>Algorithm</th>
+            <th>Type</th>
+            <th>Implementation Style</th>
+            <th>Stack Usage</th>
+          </tr>
+        </thead>
+        <tbody>
+          {algorithmResults.map((algo, idx) => (
+            <tr key={idx} className={idx === currentAlgorithmIndex ? 'highlight' : ''}>
+              <td>{algo.algorithm.split('(')[0]}</td>
+              <td>
+                <span className={`type-badge ${algo.type.toLowerCase()}`}>
+                  {algo.type}
+                </span>
+              </td>
+              <td className="implementation-desc">
+                {algo.type === 'Recursive' ? 
+                  'Uses function call stack, elegant but may cause stack overflow' :
+                  'Uses explicit loops and data structures, more memory efficient'}
+              </td>
+              <td>
+                {algo.type === 'Recursive' ? 
+                  'O(n) call stack' :
+                  'O(1) stack'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </>
+)}
+
+{/* Existing Comparison Section - Update to show more details */}
+<div className="comparison-section">
+  <h4>📊 Performance Comparison</h4>
+  <table className="comparison-table">
+    <thead>
+      <tr>
+        <th>Algorithm</th>
+        <th>Type</th>
+        <th>Distance (km)</th>
+        <th>Time (ms)</th>
+        <th>Complexity</th>
+        <th>Optimal?</th>
+      </tr>
+    </thead>
+    <tbody>
+      {algorithmResults.map((algo, index) => (
+        <tr 
+          key={index} 
+          className={algo.distance === Math.min(...algorithmResults.map(a => a.distance)) ? 'optimal' : ''}
+          onClick={() => this.changeAlgorithmView(index)}
+          style={{ cursor: 'pointer' }}
+        >
+          <td>{algo.algorithm}</td>
+          <td>
+            <span className={`type-badge ${algo.type.toLowerCase()}`}>
+              {algo.type}
+            </span>
+          </td>
+          <td><strong>{algo.distance}</strong></td>
+          <td>{algo.time}</td>
+          <td><code>{algo.complexity}</code></td>
+          <td>
+            {algo.distance === Math.min(...algorithmResults.map(a => a.distance)) ? 
+              '✅ Yes' : '❌ No'}
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+  
+  <div className="performance-insights">
+    <h5>💡 Key Insights:</h5>
+    <ul>
+      <li>
+        <strong>Brute Force (Recursive):</strong> Guarantees optimal solution but slowest - 
+        Time grows factorially: 5 cities = 120 permutations, 10 cities = 3.6M permutations!
+      </li>
+      <li>
+        <strong>Dynamic Programming (Iterative):</strong> Also optimal but much faster using memoization - 
+        Stores intermediate results to avoid recalculation
+      </li>
+      <li>
+        <strong>Nearest Neighbor (Iterative):</strong> Fastest but approximate - 
+        Good for quick estimates but may miss optimal route by 10-25%
+      </li>
+      <li>
+        <strong>Recursive vs Iterative:</strong> Brute Force uses recursion (elegant, natural for permutations), 
+        while DP and NN use iteration (explicit control, better for large inputs)
+      </li>
+    </ul>
+  </div>
+
+  {/* Final result */}
+      </div> {currentRoute && (
                     <div className="algorithm-details">
                       <h3>{currentRoute.algorithm}</h3>
                       

@@ -655,6 +655,256 @@
   margin-bottom: 20px;
 }
 
+/* Add these styles to src/app/games/tsp/tsp.css */
+
+/* Algorithm Description */
+.algorithm-description {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 10px;
+  padding: 12px 15px;
+  margin-bottom: 20px;
+  border-left: 4px solid #667eea;
+}
+
+.algorithm-description p {
+  margin: 0;
+  color: #cbd5e0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Complexity Analysis Section */
+.complexity-analysis-section {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 25px;
+  border: 1px solid rgba(100, 150, 255, 0.2);
+}
+
+.complexity-analysis-section h4 {
+  margin: 0 0 20px 0;
+  color: #fff;
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+.complexity-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.complexity-card {
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 10px;
+  padding: 15px;
+  border: 1px solid rgba(100, 150, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.complexity-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+  border-color: #667eea;
+}
+
+.complexity-title {
+  font-size: 0.85rem;
+  color: #a0aec0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.complexity-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 10px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.complexity-explanation {
+  font-size: 0.85rem;
+  color: #718096;
+  line-height: 1.5;
+}
+
+/* Recursive vs Iterative Comparison */
+.recursive-iterative-comparison {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 25px;
+  border: 1px solid rgba(100, 150, 255, 0.2);
+}
+
+.recursive-iterative-comparison h4 {
+  margin: 0 0 15px 0;
+  color: #fff;
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+.comparison-simple-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.comparison-simple-table thead {
+  background: rgba(102, 126, 234, 0.2);
+}
+
+.comparison-simple-table th,
+.comparison-simple-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.comparison-simple-table th {
+  font-weight: 700;
+  color: #cbd5e0;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.comparison-simple-table td {
+  color: #fff;
+}
+
+.comparison-simple-table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.comparison-simple-table tbody tr:hover {
+  background: rgba(102, 126, 234, 0.15);
+  cursor: pointer;
+}
+
+.comparison-simple-table tbody tr.highlight {
+  background: rgba(102, 126, 234, 0.25);
+  border-left: 3px solid #667eea;
+}
+
+.type-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.type-badge.recursive {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.3) 0%, rgba(219, 39, 119, 0.3) 100%);
+  border: 1px solid rgba(236, 72, 153, 0.5);
+  color: #fbb6ce;
+}
+
+.type-badge.iterative {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.3) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.5);
+  color: #93c5fd;
+}
+
+.implementation-desc {
+  font-size: 0.85rem;
+  color: #a0aec0;
+  font-style: italic;
+}
+
+/* Performance Insights */
+.performance-insights {
+  margin-top: 20px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 10px;
+  padding: 20px;
+  border-left: 4px solid #667eea;
+}
+
+.performance-insights h5 {
+  margin: 0 0 15px 0;
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.performance-insights ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.performance-insights li {
+  padding: 10px 0;
+  color: #cbd5e0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.performance-insights li:last-child {
+  border-bottom: none;
+}
+
+.performance-insights strong {
+  color: #fff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Update comparison table to be clickable */
+.comparison-table tbody tr {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.comparison-table tbody tr:hover {
+  background: rgba(102, 126, 234, 0.15);
+  transform: scale(1.01);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .complexity-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .comparison-simple-table {
+    font-size: 0.8rem;
+  }
+  
+  .comparison-simple-table th,
+  .comparison-simple-table td {
+    padding: 8px 6px;
+  }
+  
+  .implementation-desc {
+    font-size: 0.75rem;
+  }
+  
+  .performance-insights {
+    padding: 15px;
+  }
+  
+  .performance-insights li {
+    font-size: 0.85rem;
+  }
+}
+
 .stat-card {
   background: rgba(0, 0, 0, 0.4);
   border-radius: 10px;
