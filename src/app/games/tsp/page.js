@@ -2,7 +2,7 @@
 'use client';
 
 import React, { Component } from 'react';
-import InteractiveMap from '@/components/tsp/InteractiveMap';
+import InteractiveMap from '../../components/tsp/InteractiveMap';
 import './tsp.css';
 
 const CITIES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
