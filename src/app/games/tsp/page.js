@@ -25,7 +25,9 @@ class TSPGame extends Component {
     isLoading: false,
     showRoute: false,
     animatingRoute: false,
-    currentAlgorithmIndex: 0
+    currentAlgorithmIndex: 0,
+    gameStartTime: null, // ✅ ADD THIS
+    sessionId: null // ✅ ADD THIS TOO
   };
 }
 
@@ -202,6 +204,64 @@ getAvailableCities = () => {
   return remainingCities;
 };
 
+
+saveToDatabaseCall = async (playerName, homeCity, selectedCities, playerRoute, playerDistance, isCorrect, algorithmResults) => {
+  try {
+    console.log('💾 Saving game data to database...');
+    
+    // Prepare the data payload
+    const gameData = {
+      playerName: playerName.trim(),
+      homeCity: homeCity,
+      selectedCities: selectedCities, // Array: ["B", "C", "D"]
+      distances: this.state.distances, // Distance matrix object
+      playerRoute: playerRoute, // String: "A-B-C-D-A"
+      playerDistance: playerDistance,
+      algorithmResults: algorithmResults, // Array of algorithm results
+      startTime: this.state.gameStartTime || new Date().toISOString(),
+      endTime: new Date().toISOString()
+    };
+
+    // Call the unified save-game API endpoint
+    const response = await fetch('/api/tsp/save-game', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(gameData)
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to save game data');
+    }
+
+    console.log('✅ Game data saved successfully:', result);
+    
+    // Store session ID for potential future use
+    this.setState({ sessionId: result.sessionId });
+    
+    return result;
+
+  } catch (error) {
+    console.error('❌ Error saving game data:', error);
+    
+    // Show user-friendly error but don't stop the game
+    this.setState({ 
+      error: 'Warning: Failed to save to database. Game continues...' 
+    });
+    
+    // Clear error after 3 seconds
+    setTimeout(() => {
+      this.setState({ error: '' });
+    }, 3000);
+    
+    // Don't throw - allow game to continue even if save fails
+    return null;
+  }
+};
+
 // Calculate distance for current route
 calculateRouteDistance = () => {
   const { playerRouteArray, distances } = this.state;
@@ -358,15 +418,21 @@ generateRandomDistances = (positions) => {
     }
   };
 
-  startGame = () => {
-    const { selectedCities } = this.state;
-    
-    if (selectedCities.length < 2) {
-      this.setState({ error: 'Please select at least 2 cities to visit' });
-      return;
-    }
-    this.setState({ gameState: 'playing', error: '' });
-  };
+ // Update your existing startGame method to include this line:
+startGame = () => {
+  const { selectedCities } = this.state;
+  
+  if (selectedCities.length < 2) {
+    this.setState({ error: 'Please select at least 2 cities to visit' });
+    return;
+  }
+  
+  this.setState({ 
+    gameState: 'playing', 
+    error: '',
+    gameStartTime: new Date().toISOString() // ✅ ADD THIS LINE
+  });
+};
 
   nearestNeighborAlgorithm = (distances, cities, start) => {
     const unvisited = new Set(cities.filter(c => c !== start));
@@ -582,7 +648,15 @@ submitAnswer = async () => {
     const tolerance = 1;
     const isCorrect = Math.abs(distance - optimalDistance) <= tolerance;
 
-    await this.saveToDatabaseCall(playerName, homeCity, selectedCities, playerRoute, distance, isCorrect, results);
+    await this.saveToDatabaseCall(
+  playerName, 
+  homeCity, 
+  selectedCities, 
+  playerRoute, 
+  distance, 
+  isCorrect, 
+  results
+);
 
     this.setState({
       algorithmResults: results,
