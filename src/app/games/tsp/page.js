@@ -9,25 +9,25 @@ const CITIES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 
 class TSPGame extends Component {
   constructor(props) {
-    super(props);
-    this.state = {
-      gameState: 'welcome', // welcome, select_cities, playing, result
-      distances: {},
-      cityPositions: {},
-      homeCity: '',
-      selectedCities: [],
-      playerName: '',
-      playerAnswer: '',
-      playerRoute: '',
-      result: null,
-      algorithmResults: [],
-      error: '',
-      isLoading: false,
-      showRoute: false,
-      animatingRoute: false,
-      currentAlgorithmIndex: 0
-    };
-  }
+  super(props);
+  this.state = {
+    gameState: 'welcome',
+    distances: {},
+    cityPositions: {},
+    homeCity: '',
+    selectedCities: [],
+    playerName: '',
+    playerAnswer: '',
+    playerRouteArray: [],  // ✅ ADD THIS - replaces playerRoute string
+    result: null,
+    algorithmResults: [],
+    error: '',
+    isLoading: false,
+    showRoute: false,
+    animatingRoute: false,
+    currentAlgorithmIndex: 0
+  };
+}
 
   componentDidMount() {
     // Don't initialize game yet - wait for player name
@@ -54,31 +54,212 @@ class TSPGame extends Component {
     return positions;
   };
 
-  calculateDistance = (pos1, pos2) => {
-    const dx = pos1.x - pos2.x;
-    const dy = pos1.y - pos2.y;
-    const pixelDistance = Math.sqrt(dx * dx + dy * dy);
-    return Math.floor(pixelDistance / 5) + 50;
-  };
+// Add city to route
+addCityToRoute = (city) => {
+  const { playerRouteArray, homeCity, selectedCities } = this.state;
+  
+  // Validation: Can only add cities that are selected or home city
+  const allowedCities = [homeCity, ...selectedCities];
+  if (!allowedCities.includes(city)) {
+    this.setState({ error: 'Can only add selected cities to route' });
+    setTimeout(() => this.setState({ error: '' }), 2000);
+    return;
+  }
+  
+  // Validation: Can't add same city twice (except home at start/end)
+  if (playerRouteArray.includes(city) && city !== homeCity) {
+    this.setState({ error: `City ${city} already in route` });
+    setTimeout(() => this.setState({ error: '' }), 2000);
+    return;
+  }
+  
+  // If this is the first city, it must be home
+  if (playerRouteArray.length === 0 && city !== homeCity) {
+    this.setState({ error: 'Route must start with home city' });
+    setTimeout(() => this.setState({ error: '' }), 2000);
+    return;
+  }
+  
+  this.setState({
+    playerRouteArray: [...playerRouteArray, city],
+    error: ''
+  });
+};
 
-  generateRandomDistances = (positions) => {
-    const distances = {};
-    CITIES.forEach(city1 => {
-      distances[city1] = {};
-      CITIES.forEach(city2 => {
-        if (city1 === city2) {
-          distances[city1][city2] = 0;
-        } else if (!distances[city1][city2]) {
-          const dist = this.calculateDistance(positions[city1], positions[city2]);
-          distances[city1][city2] = dist;
-          distances[city2] = distances[city2] || {};
-          distances[city2][city1] = dist;
-        }
-      });
+// Remove last city from route
+removeLastCity = () => {
+  const { playerRouteArray } = this.state;
+  if (playerRouteArray.length > 0) {
+    this.setState({
+      playerRouteArray: playerRouteArray.slice(0, -1),
+      error: ''
     });
-    return distances;
-  };
+  }
+};
 
+// Auto-complete route (add home city at end)
+returnHome = () => {
+  const { playerRouteArray, homeCity, selectedCities } = this.state;
+  
+  // Check if all cities have been visited
+  const visitedCities = new Set(playerRouteArray.filter(c => c !== homeCity));
+  const allVisited = selectedCities.every(city => visitedCities.has(city));
+  
+  if (!allVisited) {
+    this.setState({ 
+      error: 'Must visit all selected cities before returning home' 
+    });
+    setTimeout(() => this.setState({ error: '' }), 3000);
+    return;
+  }
+  
+  if (playerRouteArray[playerRouteArray.length - 1] !== homeCity) {
+    this.setState({
+      playerRouteArray: [...playerRouteArray, homeCity],
+      error: ''
+    });
+  }
+};
+
+// Clear route
+clearRoute = () => {
+  this.setState({
+    playerRouteArray: [],
+    error: ''
+  });
+};
+
+// Get available cities for next selection
+getAvailableCities = () => {
+  const { playerRouteArray, homeCity, selectedCities } = this.state;
+  const visitedCities = new Set(playerRouteArray);
+  
+  // If route is empty, only home city is available
+  if (playerRouteArray.length === 0) {
+    return [homeCity];
+  }
+  
+  // If all cities visited, only home city is available
+  const remainingCities = selectedCities.filter(c => !visitedCities.has(c));
+  if (remainingCities.length === 0 && !visitedCities.has(homeCity)) {
+    return [homeCity];
+  }
+  
+  return remainingCities;
+};
+
+// Calculate distance for current route
+calculateRouteDistance = () => {
+  const { playerRouteArray, distances } = this.state;
+  if (playerRouteArray.length < 2) return 0;
+  
+  let totalDistance = 0;
+  for (let i = 0; i < playerRouteArray.length - 1; i++) {
+    const from = playerRouteArray[i];
+    const to = playerRouteArray[i + 1];
+    totalDistance += distances[from]?.[to] || 0;
+  }
+  return totalDistance;
+};
+
+// Check if route is complete
+isRouteComplete = () => {
+  const { playerRouteArray, homeCity, selectedCities } = this.state;
+  
+  // Must start and end with home city
+  if (playerRouteArray.length === 0) return false;
+  if (playerRouteArray[0] !== homeCity) return false;
+  if (playerRouteArray[playerRouteArray.length - 1] !== homeCity) return false;
+  
+  // Must visit all selected cities
+  const visitedCities = new Set(playerRouteArray.filter(c => c !== homeCity));
+  return selectedCities.every(city => visitedCities.has(city));
+};
+
+// Get available cities for next selection
+getAvailableCities = () => {
+  const { playerRouteArray, homeCity, selectedCities } = this.state;
+  const visitedCities = new Set(playerRouteArray);
+  
+  // If route is empty, only home city is available
+  if (playerRouteArray.length === 0) {
+    return [homeCity];
+  }
+  
+  // If all cities visited, only home city is available
+  const remainingCities = selectedCities.filter(c => !visitedCities.has(c));
+  if (remainingCities.length === 0) {
+    return [homeCity];
+  }
+  
+  return remainingCities;
+};
+
+// Calculate distance for current route
+calculateRouteDistance = () => {
+  const { playerRouteArray, distances } = this.state;
+  if (playerRouteArray.length < 2) return 0;
+  
+  let totalDistance = 0;
+  for (let i = 0; i < playerRouteArray.length - 1; i++) {
+    const from = playerRouteArray[i];
+    const to = playerRouteArray[i + 1];
+    totalDistance += distances[from]?.[to] || 0;
+  }
+  return totalDistance;
+};
+
+// Check if route is complete
+isRouteComplete = () => {
+  const { playerRouteArray, homeCity, selectedCities } = this.state;
+  
+  // Must start and end with home city
+  if (playerRouteArray.length === 0) return false;
+  if (playerRouteArray[0] !== homeCity) return false;
+  if (playerRouteArray[playerRouteArray.length - 1] !== homeCity) return false;
+  
+  // Must visit all selected cities
+  const visitedCities = new Set(playerRouteArray.filter(c => c !== homeCity));
+  return selectedCities.every(city => visitedCities.has(city));
+};
+
+calculateDistance = (pos1, pos2) => {
+  const dx = pos1.x - pos2.x;
+  const dy = pos1.y - pos2.y;
+  const pixelDistance = Math.sqrt(dx * dx + dy * dy);
+  
+  // ✅ FIX: Ensure distance is always between 50-100 km
+  // Normalize pixel distance to 0-1 range, then scale to 50-100
+  const maxPixelDistance = Math.sqrt(800 * 800 + 600 * 600); // ~1000 pixels
+  const normalizedDistance = pixelDistance / maxPixelDistance; // 0 to 1
+  const distance = Math.floor(normalizedDistance * 50) + 50; // 50 to 100
+  
+  return distance;
+};
+
+
+generateRandomDistances = (positions) => {
+  const distances = {};
+  CITIES.forEach(city1 => {
+    distances[city1] = {};
+    CITIES.forEach(city2 => {
+      if (city1 === city2) {
+        distances[city1][city2] = 0;
+      } else if (!distances[city1][city2]) {
+        // ✅ Calculate distance based on positions
+        const dist = this.calculateDistance(positions[city1], positions[city2]);
+        
+        // ✅ DOUBLE CHECK: Ensure it's within range (safety check)
+        const finalDist = Math.max(50, Math.min(100, dist));
+        
+        distances[city1][city2] = finalDist;
+        distances[city2] = distances[city2] || {};
+        distances[city2][city1] = finalDist;
+      }
+    });
+  });
+  return distances;
+};
   getRandomHomeCity = () => {
     return CITIES[Math.floor(Math.random() * CITIES.length)];
   };
@@ -118,29 +299,29 @@ class TSPGame extends Component {
   };
 
   initializeGame = () => {
-    try {
-      const newPositions = this.generateCityPositions();
-      const newDistances = this.generateRandomDistances(newPositions);
-      const newHomeCity = this.getRandomHomeCity();
-      
-      this.setState({
-        distances: newDistances,
-        cityPositions: newPositions,
-        homeCity: newHomeCity,
-        selectedCities: [],
-        playerAnswer: '',
-        playerRoute: '',
-        result: null,
-        algorithmResults: [],
-        error: '',
-        gameState: 'select_cities',
-        showRoute: false,
-        animatingRoute: false
-      });
-    } catch (err) {
-      this.setState({ error: 'Failed to initialize game: ' + err.message });
-    }
-  };
+  try {
+    const newPositions = this.generateCityPositions();
+    const newDistances = this.generateRandomDistances(newPositions);
+    const newHomeCity = this.getRandomHomeCity();
+    
+    this.setState({
+      distances: newDistances,
+      cityPositions: newPositions,
+      homeCity: newHomeCity,
+      selectedCities: [],
+      playerAnswer: '',
+      playerRouteArray: [],  // ✅ RESET ROUTE ARRAY
+      result: null,
+      algorithmResults: [],
+      error: '',
+      gameState: 'select_cities',
+      showRoute: false,
+      animatingRoute: false
+    });
+  } catch (err) {
+    this.setState({ error: 'Failed to initialize game: ' + err.message });
+  }
+};
 
   toggleCitySelection = (city) => {
     const { homeCity, selectedCities } = this.state;
@@ -305,7 +486,7 @@ submitAnswer = async () => {
   try {
     this.setState({ isLoading: true, error: '' });
 
-    const { playerAnswer, playerRoute, homeCity, selectedCities, distances, playerName } = this.state;
+    const { playerAnswer, playerRouteArray, homeCity, selectedCities, distances, playerName } = this.state;
 
     if (!playerAnswer.trim()) {
       this.setState({ error: 'Please enter the shortest distance', isLoading: false });
@@ -318,15 +499,28 @@ submitAnswer = async () => {
       return;
     }
 
-    if (!playerRoute.trim()) {
-      this.setState({ error: 'Please enter the route (e.g., A-B-C-A)', isLoading: false });
+    // ✅ VALIDATE ROUTE ARRAY
+    if (playerRouteArray.length === 0) {
+      this.setState({ error: 'Please build your route using the route builder', isLoading: false });
       return;
     }
+
+    if (!this.isRouteComplete()) {
+      this.setState({ 
+        error: 'Route incomplete - must visit all cities and return home', 
+        isLoading: false 
+      });
+      return;
+    }
+
+    // ✅ CONVERT ARRAY TO STRING FOR DATABASE
+    const playerRoute = playerRouteArray.join('-');
 
     const citiesToVisit = [homeCity, ...selectedCities];
     const results = [];
 
-    // Algorithm 1: Nearest Neighbor (Greedy - Iterative)
+    // ... rest of your existing algorithm code ...
+    // Algorithm 1: Nearest Neighbor
     const nn_start = performance.now();
     const nnResult = this.nearestNeighborAlgorithm(distances, citiesToVisit, homeCity);
     const nn_end = performance.now();
@@ -341,8 +535,7 @@ submitAnswer = async () => {
       description: 'Greedy heuristic approach - always picks nearest unvisited city'
     });
 
-    // Algorithm 2: Brute Force (Recursive)
-    // WARNING: This will be VERY slow for more than 10 cities
+    // Algorithm 2: Brute Force
     const bf_start = performance.now();
     const bfResult = this.bruteForceTSP(distances, citiesToVisit, homeCity);
     const bf_end = performance.now();
@@ -357,7 +550,7 @@ submitAnswer = async () => {
       description: 'Exhaustive search - tries all possible permutations recursively'
     });
 
-    // Algorithm 3: Dynamic Programming (Held-Karp - Iterative)
+    // Algorithm 3: Dynamic Programming
     const dp_start = performance.now();
     const dpResult = this.dynamicProgrammingTSP(distances, citiesToVisit, homeCity);
     const dp_end = performance.now();
@@ -372,13 +565,10 @@ submitAnswer = async () => {
       description: 'Optimal solution using memoization - stores subproblem results'
     });
 
-    // Determine optimal distance
     const optimalDistance = Math.min(...results.map(r => r.distance));
     const tolerance = 1;
-    
     const isCorrect = Math.abs(distance - optimalDistance) <= tolerance;
 
-    // Save to database
     await this.saveToDatabaseCall(playerName, homeCity, selectedCities, playerRoute, distance, isCorrect, results);
 
     this.setState({
@@ -394,45 +584,6 @@ submitAnswer = async () => {
     this.setState({ error: 'Error: ' + err.message, isLoading: false });
   }
 };
-
-  saveToDatabaseCall = async (playerName, homeCity, selectedCities, playerRoute, playerDistance, isCorrect, results) => {
-    try {
-      const gameData = {
-        playerName,
-        homeCity,
-        selectedCities: selectedCities.join(','),
-        shortestRoute: results[results.length - 1].routeString,
-        shortestDistance: Math.min(...results.map(r => r.distance)),
-        playerRoute,
-        playerDistance,
-        isCorrect,
-        timestamp: new Date().toISOString()
-      };
-
-      await fetch('/api/tsp/save-result', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(gameData)
-      });
-
-      for (const result of results) {
-        await fetch('/api/tsp/save-time', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            playerName: playerName,
-            algorithmName: result.algorithm,
-            timeTaken: parseFloat(result.time),
-            numCities: selectedCities.length + 1,
-            timestamp: new Date().toISOString()
-          })
-        });
-      }
-    } catch (err) {
-      console.error('Database error:', err);
-    }
-  };
-
   resetGame = () => {
     this.initializeGame();
   };
@@ -450,23 +601,23 @@ submitAnswer = async () => {
 
   render() {
     const {
-      gameState,
-      distances,
-      cityPositions,
-      homeCity,
-      selectedCities,
-      playerName,
-      playerAnswer,
-      playerRoute,
-      result,
-      algorithmResults,
-      error,
-      isLoading,
-      showRoute,
-      currentAlgorithmIndex
-    } = this.state;
+    gameState,
+    distances,
+    cityPositions,
+    homeCity,
+    selectedCities,
+    playerName,
+    playerAnswer,
+    playerRouteArray,  // ✅ CHANGE FROM playerRoute TO playerRouteArray
+    result,
+    algorithmResults,
+    error,
+    isLoading,
+    showRoute,
+    currentAlgorithmIndex
+  } = this.state;
 
-    const currentRoute = algorithmResults[currentAlgorithmIndex];
+  const currentRoute = algorithmResults[currentAlgorithmIndex];
 
     return (
       <div className="tsp-game-container">
@@ -649,17 +800,111 @@ submitAnswer = async () => {
                     />
                   </div>
 
-                  <div className="input-group">
-                    <label>Your Route:</label>
-                    <input
-                      type="text"
-                      value={playerRoute}
-                      onChange={(e) => this.setState({ playerRoute: e.target.value, error: '' })}
-                      placeholder="e.g., A-B-C-A"
-                      className="input-field"
-                    />
-                    <small className="hint">Format: {homeCity}-City1-City2-...-{homeCity}</small>
-                  </div>
+                 <div className="route-builder-section">
+            <h3>Build Your Route</h3>
+            
+            {/* Current Route Display */}
+            <div className="current-route-display">
+              <div className="route-label">Current Route:</div>
+              <div className="route-cities">
+                {playerRouteArray.length === 0 ? (
+                  <span className="route-empty">Start by selecting {homeCity}</span>
+                ) : (
+                  playerRouteArray.map((city, index) => (
+                    <React.Fragment key={index}>
+                      <span className={`route-city ${city === homeCity ? 'home-city' : ''}`}>
+                        {city}
+                      </span>
+                      {index < playerRouteArray.length - 1 && (
+                        <span className="route-arrow">→</span>
+                      )}
+                    </React.Fragment>
+                  ))
+                )}
+              </div>
+              
+              {/* Route Distance Calculator */}
+              {playerRouteArray.length >= 2 && (
+                <div className="route-distance-display">
+                  <span className="distance-label">Current Distance:</span>
+                  <span className="distance-value">{this.calculateRouteDistance()} km</span>
+                </div>
+              )}
+            </div>
+
+      {/* Route Building Controls */}
+      <div className="route-controls">
+        <div className="control-row">
+          <label htmlFor="citySelect">Select next city:</label>
+          <select
+            id="citySelect"
+            className="city-select"
+            value=""
+            onChange={(e) => {
+              if (e.target.value) {
+                this.addCityToRoute(e.target.value);
+                e.target.value = ''; // Reset select
+              }
+            }}
+          >
+            <option value="">-- Select City --</option>
+            {this.getAvailableCities().map(city => (
+              <option key={city} value={city}>
+                {city} {city === homeCity ? '(Home)' : ''}
+              </option>
+            ))}
+          </select>
+          
+          <button
+            onClick={() => {
+              const select = document.getElementById('citySelect');
+              if (select.value) {
+                this.addCityToRoute(select.value);
+                select.value = '';
+              }
+            }}
+            className="btn-add-city"
+            disabled={this.getAvailableCities().length === 0}
+          >
+            Add
+          </button>
+        </div>
+
+        <div className="control-buttons">
+          <button
+            onClick={this.removeLastCity}
+            className="btn-secondary"
+            disabled={playerRouteArray.length === 0}
+          >
+            Remove Last
+          </button>
+          
+          <button
+            onClick={this.returnHome}
+            className="btn-return-home"
+            disabled={
+              playerRouteArray.length === 0 || 
+              playerRouteArray[playerRouteArray.length - 1] === homeCity
+            }
+          >
+            Return Home
+          </button>
+        </div>
+      </div>
+
+      {/* Route Completion Status */}
+      <div className="route-status">
+        {this.isRouteComplete() ? (
+          <div className="status-complete">✅ Route Complete!</div>
+        ) : (
+          <div className="status-incomplete">
+            {playerRouteArray.length === 0 
+              ? '⚠️ Start building your route'
+              : '⚠️ Route incomplete - visit all cities and return home'}
+          </div>
+        )}
+      </div>
+    </div>
 
                   {/* Distance Reference Table */}
                   <div className="distance-reference">
@@ -692,13 +937,13 @@ submitAnswer = async () => {
 
                   {error && <div className="error-alert">{error}</div>}
 
-                  <button 
-                    onClick={this.submitAnswer} 
-                    className="btn-primary btn-large"
-                    disabled={isLoading || !playerAnswer || !playerRoute}
-                  >
-                    {isLoading ? '⏳ Calculating...' : 'Submit Answer'}
-                  </button>
+                <button 
+                onClick={this.submitAnswer} 
+                className="btn-primary btn-large"
+                disabled={isLoading || !playerAnswer || !this.isRouteComplete()}  // ✅ NEW CODE
+              >
+                {isLoading ? '⏳ Calculating...' : 'Submit Answer'}
+              </button>
                 </div>
               )}
 

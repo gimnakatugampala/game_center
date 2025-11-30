@@ -168,30 +168,38 @@ class TSPHelpers {
     return positions;
   }
 
-  static calculateDistance(pos1, pos2) {
-    const dx = pos1.x - pos2.x;
-    const dy = pos1.y - pos2.y;
-    const pixelDistance = Math.sqrt(dx * dx + dy * dy);
-    return Math.floor(pixelDistance / 5) + 50;
-  }
+static calculateDistance(pos1, pos2) {
+  const dx = pos1.x - pos2.x;
+  const dy = pos1.y - pos2.y;
+  const pixelDistance = Math.sqrt(dx * dx + dy * dy);
+  
+  // ✅ FIXED: Normalize to 50-100 km range
+  const maxPixelDistance = Math.sqrt(800 * 800 + 600 * 600);
+  const normalizedDistance = pixelDistance / maxPixelDistance;
+  const distance = Math.floor(normalizedDistance * 50) + 50;
+  
+  return distance;
+}
 
-  static generateRandomDistances(positions) {
-    const distances = {};
-    CITIES.forEach(city1 => {
-      distances[city1] = {};
-      CITIES.forEach(city2 => {
-        if (city1 === city2) {
-          distances[city1][city2] = 0;
-        } else if (!distances[city1][city2]) {
-          const dist = this.calculateDistance(positions[city1], positions[city2]);
-          distances[city1][city2] = dist;
-          distances[city2] = distances[city2] || {};
-          distances[city2][city1] = dist;
-        }
-      });
+ static generateRandomDistances(positions) {
+  const distances = {};
+  CITIES.forEach(city1 => {
+    distances[city1] = {};
+    CITIES.forEach(city2 => {
+      if (city1 === city2) {
+        distances[city1][city2] = 0;
+      } else if (!distances[city1][city2]) {
+        const dist = this.calculateDistance(positions[city1], positions[city2]);
+        const finalDist = Math.max(50, Math.min(100, dist)); // Safety clamp
+        
+        distances[city1][city2] = finalDist;
+        distances[city2] = distances[city2] || {};
+        distances[city2][city1] = finalDist;
+      }
     });
-    return distances;
-  }
+  });
+  return distances;
+}
 
   static getRandomHomeCity() {
     return CITIES[Math.floor(Math.random() * CITIES.length)];
