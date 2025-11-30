@@ -1105,340 +1105,378 @@ submitAnswer = async () => {
             </div>
           )}
 
-              {/* Result Phase */}
-              {gameState === 'result' && (
-                <div className="game-panel">
-                  <div className={`result-header ${result}`}>
-                    <h2>
-                      {result === 'win' ? '🎉 Correct!' : '❌ Incorrect'}
-                    </h2>
-                    <p>
-                      {result === 'win' 
-                        ? 'Great job! You found the optimal route!' 
-                        : 'Not quite. Check the optimal solution below.'}
-                    </p>
-                  </div>
-
-                  {/* Player Performance Analysis */}
-<div className="player-performance-analysis">
-  <h3>📊 Your Performance</h3>
-  
-  <div className="performance-grid">
-    <div className="performance-card">
-      <div className="performance-label">Your Route Distance</div>
-      <div className="performance-value actual">
-        {this.state.playerActualDistance} km
-      </div>
-      <div className="performance-detail">
-        Route: {playerRouteArray.join(' → ')}
-      </div>
-    </div>
+             
+              {/* Result Phase - Tailwind Organized */}
+{gameState === 'result' && (
+  <div className="bg-slate-800/80 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-slate-700/50">
     
-    <div className="performance-card">
-      <div className="performance-label">Your Guess</div>
-      <div className="performance-value guess">
-        {this.state.playerGuessedDistance} km
-      </div>
-      <div className="performance-detail">
-        {Math.abs(this.state.playerGuessedDistance - this.state.optimalDistance) <= 1 
-          ? '🎯 Excellent guess!' 
-          : `Off by ${Math.abs(this.state.playerGuessedDistance - this.state.optimalDistance).toFixed(1)} km`}
-      </div>
+    {/* Result Header */}
+    <div className={`text-center rounded-2xl p-8 mb-6 ${
+      result === 'win' 
+        ? 'bg-gradient-to-r from-emerald-500/20 to-green-500/20 border-2 border-emerald-500/50' 
+        : 'bg-gradient-to-r from-red-500/20 to-rose-500/20 border-2 border-red-500/50'
+    }`}>
+      <h2 className="text-4xl font-bold mb-3">
+        {result === 'win' ? '🎉 Correct!' : '❌ Incorrect'}
+      </h2>
+      <p className="text-slate-300 text-lg">
+        {result === 'win' 
+          ? 'Great job! You found the optimal route!' 
+          : 'Not quite. Check the optimal solution below.'}
+      </p>
     </div>
-    
-    <div className="performance-card optimal">
-      <div className="performance-label">Optimal Distance</div>
-      <div className="performance-value optimal">
-        {this.state.optimalDistance} km
-      </div>
-      <div className="performance-detail">
-        {this.state.playerActualDistance === this.state.optimalDistance 
-          ? '✅ You found it!' 
-          : `${(this.state.playerActualDistance - this.state.optimalDistance).toFixed(1)} km longer`}
-      </div>
-    </div>
-  </div>
 
-  {/* Insight Message */}
-  <div className="performance-insight">
-    {result === 'win' ? (
-      <div className="insight-success">
-        <strong>🎉 Outstanding!</strong> You correctly identified the shortest distance!
-        {this.state.playerActualDistance === this.state.optimalDistance && (
-          <span> And you found the optimal route on your first try!</span>
+    {/* Player Performance Analysis */}
+    <div className="bg-slate-900/50 rounded-2xl p-6 mb-6 border border-slate-700/30">
+      <h3 className="text-2xl font-bold text-center text-white mb-6">
+        📊 Your Performance
+      </h3>
+      
+      {/* Performance Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+        {/* Your Route Distance */}
+        <div className="bg-slate-800/60 rounded-xl p-5 text-center border-2 border-slate-700/40 hover:border-amber-500/50 hover:-translate-y-1 transition-all duration-300">
+          <div className="text-xs uppercase tracking-wider text-slate-400 mb-2 font-semibold">
+            Your Route Distance
+          </div>
+          <div className="text-3xl font-extrabold text-amber-400 mb-3">
+            {this.state.playerActualDistance} km
+          </div>
+          <div className="text-sm text-slate-400 leading-relaxed min-h-[40px]">
+            Route: {playerRouteArray.join(' → ')}
+          </div>
+        </div>
+        
+        {/* Your Guess */}
+        <div className="bg-slate-800/60 rounded-xl p-5 text-center border-2 border-slate-700/40 hover:border-blue-500/50 hover:-translate-y-1 transition-all duration-300">
+          <div className="text-xs uppercase tracking-wider text-slate-400 mb-2 font-semibold">
+            Your Guess
+          </div>
+          <div className="text-3xl font-extrabold text-blue-400 mb-3">
+            {this.state.playerGuessedDistance} km
+          </div>
+          <div className="text-sm text-slate-400 leading-relaxed min-h-[40px]">
+            {Math.abs(this.state.playerGuessedDistance - this.state.optimalDistance) <= 1 
+              ? '🎯 Excellent guess!' 
+              : `Off by ${Math.abs(this.state.playerGuessedDistance - this.state.optimalDistance).toFixed(1)} km`}
+          </div>
+        </div>
+        
+        {/* Optimal Distance */}
+        <div className="bg-gradient-to-br from-emerald-900/30 to-green-900/30 rounded-xl p-5 text-center border-2 border-emerald-500/50 hover:border-emerald-400 hover:-translate-y-1 transition-all duration-300">
+          <div className="text-xs uppercase tracking-wider text-emerald-300 mb-2 font-semibold">
+            Optimal Distance
+          </div>
+          <div className="text-3xl font-extrabold text-emerald-400 mb-3">
+            {this.state.optimalDistance} km
+          </div>
+          <div className="text-sm text-emerald-200/70 leading-relaxed min-h-[40px]">
+            {this.state.playerActualDistance === this.state.optimalDistance 
+              ? '✅ You found it!' 
+              : `${(this.state.playerActualDistance - this.state.optimalDistance).toFixed(1)} km longer`}
+          </div>
+        </div>
+      </div>
+
+      {/* Insight Message */}
+      <div className="text-center">
+        {result === 'win' ? (
+          <div className="bg-emerald-500/20 border-2 border-emerald-500/40 text-emerald-100 p-4 rounded-xl leading-relaxed">
+            <strong className="text-white">🎉 Outstanding!</strong> You correctly identified the shortest distance!
+            {this.state.playerActualDistance === this.state.optimalDistance && (
+              <span> And you found the optimal route on your first try!</span>
+            )}
+          </div>
+        ) : (
+          <div className="bg-blue-500/20 border-2 border-blue-500/40 text-blue-100 p-4 rounded-xl leading-relaxed">
+            <strong className="text-white">💡 Learning Opportunity:</strong> Compare your route with the optimal solutions below 
+            to see how different algorithms approach this problem.
+          </div>
         )}
       </div>
-    ) : (
-      <div className="insight-info">
-        <strong>💡 Learning Opportunity:</strong> Compare your route with the optimal solutions below 
-        to see how different algorithms approach this problem.
-      </div>
-    )}
-  </div>
-</div>
+    </div>
 
-                  <div className="algorithm-tabs">
-                    {algorithmResults.map((algo, index) => (
-                      <button
-                        key={index}
-                        onClick={() => this.changeAlgorithmView(index)}
-                        className={`tab-btn ${currentAlgorithmIndex === index ? 'active' : ''}`}
-                      >
-                        {algo.algorithm.split('(')[0]}
-                      </button>
-                    ))}
-                  </div>
+    {/* Algorithm Tabs */}
+    <div className="flex gap-3 mb-6 overflow-x-auto pb-2">
+      {algorithmResults.map((algo, index) => (
+        <button
+          key={index}
+          onClick={() => this.changeAlgorithmView(index)}
+          className={`flex-1 min-w-fit px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-300 whitespace-nowrap ${
+            currentAlgorithmIndex === index
+              ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-500/50 scale-105'
+              : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-600/50'
+          }`}
+        >
+          {algo.algorithm.split('(')[0]}
+        </button>
+      ))}
+    </div>
 
-                 {/* // Add this section in the Result Phase of page.js, after the algorithm-details div */}
+    {/* Algorithm Details */}
+    {currentRoute && (
+      <>
+        <div className="bg-slate-900/50 rounded-2xl p-6 mb-6 border border-slate-700/30">
+          <h3 className="text-2xl font-bold text-center text-white mb-5">
+            {currentRoute.algorithm}
+          </h3>
+          
+          {/* Algorithm Description */}
+          <div className="bg-slate-800/60 rounded-xl p-4 mb-5 border-l-4 border-violet-500">
+            <p className="text-slate-300 text-sm leading-relaxed">
+              {currentRoute.description}
+            </p>
+          </div>
+          
+          {/* Result Stats */}
+          <div className="grid grid-cols-3 gap-4 mb-5">
+            <div className="bg-slate-800/60 rounded-xl p-4 text-center">
+              <div className="text-xs uppercase tracking-wider text-slate-400 mb-2">Distance</div>
+              <div className="text-2xl font-extrabold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
+                {currentRoute.distance} km
+              </div>
+            </div>
+            <div className="bg-slate-800/60 rounded-xl p-4 text-center">
+              <div className="text-xs uppercase tracking-wider text-slate-400 mb-2">Time</div>
+              <div className="text-2xl font-extrabold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
+                {currentRoute.time} ms
+              </div>
+            </div>
+            <div className="bg-slate-800/60 rounded-xl p-4 text-center">
+              <div className="text-xs uppercase tracking-wider text-slate-400 mb-2">Complexity</div>
+              <div className="text-2xl font-extrabold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
+                {currentRoute.complexity}
+              </div>
+            </div>
+          </div>
 
-            {currentRoute && (
-              <>
-                <div className="algorithm-details">
-                  <h3>{currentRoute.algorithm}</h3>
-                  
-                  <div className="algorithm-description">
-                    <p>{currentRoute.description}</p>
-                  </div>
-                  
-                  <div className="result-stats">
-                    <div className="stat-card">
-                      <div className="stat-label">Distance</div>
-                      <div className="stat-value">{currentRoute.distance} km</div>
-                    </div>
-                    <div className="stat-card">
-                      <div className="stat-label">Time</div>
-                      <div className="stat-value">{currentRoute.time} ms</div>
-                    </div>
-                    <div className="stat-card">
-                      <div className="stat-label">Complexity</div>
-                      <div className="stat-value">{currentRoute.complexity}</div>
-                    </div>
-                  </div>
+          {/* Route Display */}
+          <div className="bg-slate-800/60 rounded-xl p-4 mb-4">
+            <strong className="block mb-3 text-slate-300">Route:</strong>
+            <div className="text-white font-semibold text-lg break-words leading-relaxed">
+              {currentRoute.routeString}
+            </div>
+          </div>
 
-                  <div className="route-display">
-                    <strong>Route:</strong>
-                    <div className="route-path">{currentRoute.routeString}</div>
-                  </div>
+          {/* Algorithm Type Badge */}
+          <div className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-violet-500/30 to-purple-500/30 border border-violet-500/50 text-white font-semibold text-sm">
+            {currentRoute.type === 'Recursive' ? '🔄 Recursive Implementation' : '➡️ Iterative Implementation'}
+          </div>
+        </div>
 
-                  <div className="algorithm-type-badge">
-                    {currentRoute.type === 'Recursive' ? '🔄 Recursive Implementation' : '➡️ Iterative Implementation'}
-                  </div>
-                </div>
+        {/* Complexity Analysis Section */}
+        <div className="bg-slate-900/50 rounded-2xl p-6 mb-6 border border-slate-700/30">
+          <h4 className="text-xl font-bold text-center text-white mb-5">
+            🔍 Complexity Analysis
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Time Complexity */}
+            <div className="bg-slate-800/60 rounded-xl p-5 border border-slate-700/40 hover:border-violet-500/50 hover:-translate-y-1 transition-all duration-300">
+              <div className="text-xs uppercase tracking-wider text-slate-400 mb-2 font-semibold">
+                Time Complexity
+              </div>
+              <div className="text-2xl font-extrabold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent mb-3">
+                {currentRoute.complexity}
+              </div>
+              <div className="text-xs text-slate-400 leading-relaxed">
+                {currentRoute.algorithm.includes('Nearest') && 
+                  'For each city, searches all remaining unvisited cities'}
+                {currentRoute.algorithm.includes('Brute') && 
+                  'Generates all (n-1)! permutations of cities to find optimal route'}
+                {currentRoute.algorithm.includes('Dynamic') && 
+                  'Uses bitmask (2ⁿ states) and checks n cities for each state'}
+              </div>
+            </div>
+            
+            {/* Space Complexity */}
+            <div className="bg-slate-800/60 rounded-xl p-5 border border-slate-700/40 hover:border-violet-500/50 hover:-translate-y-1 transition-all duration-300">
+              <div className="text-xs uppercase tracking-wider text-slate-400 mb-2 font-semibold">
+                Space Complexity
+              </div>
+              <div className="text-2xl font-extrabold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent mb-3">
+                {currentRoute.algorithm.includes('Nearest') && 'O(n)'}
+                {currentRoute.algorithm.includes('Brute') && 'O(n)'}
+                {currentRoute.algorithm.includes('Dynamic') && 'O(n × 2ⁿ)'}
+              </div>
+              <div className="text-xs text-slate-400 leading-relaxed">
+                {currentRoute.algorithm.includes('Nearest') && 
+                  'Stores only the current route and unvisited set'}
+                {currentRoute.algorithm.includes('Brute') && 
+                  'Recursion stack depth is at most n'}
+                {currentRoute.algorithm.includes('Dynamic') && 
+                  'Memoization table stores all visited states'}
+              </div>
+            </div>
 
-                {/* NEW: Complexity Analysis Section */}
-                <div className="complexity-analysis-section">
-                  <h4>🔍 Complexity Analysis</h4>
-                  <div className="complexity-grid">
-                    <div className="complexity-card">
-                      <div className="complexity-title">Time Complexity</div>
-                      <div className="complexity-value">{currentRoute.complexity}</div>
-                      <div className="complexity-explanation">
-                        {currentRoute.algorithm.includes('Nearest') && 
-                          'For each city, searches all remaining unvisited cities'}
-                        {currentRoute.algorithm.includes('Brute') && 
-                          'Generates all (n-1)! permutations of cities to find optimal route'}
-                        {currentRoute.algorithm.includes('Dynamic') && 
-                          'Uses bitmask (2ⁿ states) and checks n cities for each state'}
-                      </div>
-                    </div>
-                    
-                    <div className="complexity-card">
-                      <div className="complexity-title">Space Complexity</div>
-                      <div className="complexity-value">
-                        {currentRoute.algorithm.includes('Nearest') && 'O(n)'}
-                        {currentRoute.algorithm.includes('Brute') && 'O(n)'}
-                        {currentRoute.algorithm.includes('Dynamic') && 'O(n × 2ⁿ)'}
-                      </div>
-                      <div className="complexity-explanation">
-                        {currentRoute.algorithm.includes('Nearest') && 
-                          'Stores only the current route and unvisited set'}
-                        {currentRoute.algorithm.includes('Brute') && 
-                          'Recursion stack depth is at most n'}
-                        {currentRoute.algorithm.includes('Dynamic') && 
-                          'Memoization table stores all visited states'}
-                      </div>
-                    </div>
+            {/* Optimality */}
+            <div className="bg-slate-800/60 rounded-xl p-5 border border-slate-700/40 hover:border-violet-500/50 hover:-translate-y-1 transition-all duration-300">
+              <div className="text-xs uppercase tracking-wider text-slate-400 mb-2 font-semibold">
+                Optimality
+              </div>
+              <div className="text-2xl font-extrabold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent mb-3">
+                {currentRoute.algorithm.includes('Nearest') && '❌ Approximate'}
+                {currentRoute.algorithm.includes('Brute') && '✅ Optimal'}
+                {currentRoute.algorithm.includes('Dynamic') && '✅ Optimal'}
+              </div>
+              <div className="text-xs text-slate-400 leading-relaxed">
+                {currentRoute.algorithm.includes('Nearest') && 
+                  'Heuristic approach - may not find shortest path'}
+                {currentRoute.algorithm.includes('Brute') && 
+                  'Exhaustive search guarantees optimal solution'}
+                {currentRoute.algorithm.includes('Dynamic') && 
+                  'Systematic search with memoization guarantees optimality'}
+              </div>
+            </div>
+          </div>
+        </div>
 
-                    <div className="complexity-card">
-                      <div className="complexity-title">Optimality</div>
-                      <div className="complexity-value">
-                        {currentRoute.algorithm.includes('Nearest') && '❌ Approximate'}
-                        {currentRoute.algorithm.includes('Brute') && '✅ Optimal'}
-                        {currentRoute.algorithm.includes('Dynamic') && '✅ Optimal'}
-                      </div>
-                      <div className="complexity-explanation">
-                        {currentRoute.algorithm.includes('Nearest') && 
-                          'Heuristic approach - may not find shortest path'}
-                        {currentRoute.algorithm.includes('Brute') && 
-                          'Exhaustive search guarantees optimal solution'}
-                        {currentRoute.algorithm.includes('Dynamic') && 
-                          'Systematic search with memoization guarantees optimality'}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* NEW: Recursive vs Iterative Comparison */}
-                <div className="recursive-iterative-comparison">
-                  <h4>🔄 Recursive vs Iterative Comparison</h4>
-                  <table className="comparison-simple-table">
-                    <thead>
-                      <tr>
-                        <th>Algorithm</th>
-                        <th>Type</th>
-                        <th>Implementation Style</th>
-                        <th>Stack Usage</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {algorithmResults.map((algo, idx) => (
-                        <tr key={idx} className={idx === currentAlgorithmIndex ? 'highlight' : ''}>
-                          <td>{algo.algorithm.split('(')[0]}</td>
-                          <td>
-                            <span className={`type-badge ${algo.type.toLowerCase()}`}>
-                              {algo.type}
-                            </span>
-                          </td>
-                          <td className="implementation-desc">
-                            {algo.type === 'Recursive' ? 
-                              'Uses function call stack, elegant but may cause stack overflow' :
-                              'Uses explicit loops and data structures, more memory efficient'}
-                          </td>
-                          <td>
-                            {algo.type === 'Recursive' ? 
-                              'O(n) call stack' :
-                              'O(1) stack'}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            )}
-
-          {/* Existing Comparison Section - Update to show more details */}
-          <div className="comparison-section">
-            <h4>📊 Performance Comparison</h4>
-            <table className="comparison-table">
+        {/* Recursive vs Iterative Comparison */}
+        <div className="bg-slate-900/50 rounded-2xl p-6 mb-6 border border-slate-700/30">
+          <h4 className="text-xl font-bold text-center text-white mb-5">
+            🔄 Recursive vs Iterative Comparison
+          </h4>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
               <thead>
-                <tr>
-                  <th>Algorithm</th>
-                  <th>Type</th>
-                  <th>Distance (km)</th>
-                  <th>Time (ms)</th>
-                  <th>Complexity</th>
-                  <th>Optimal?</th>
+                <tr className="bg-violet-900/30">
+                  <th className="p-3 text-left text-xs uppercase tracking-wider text-slate-300 font-semibold border-b border-slate-700">
+                    Algorithm
+                  </th>
+                  <th className="p-3 text-left text-xs uppercase tracking-wider text-slate-300 font-semibold border-b border-slate-700">
+                    Type
+                  </th>
+                  <th className="p-3 text-left text-xs uppercase tracking-wider text-slate-300 font-semibold border-b border-slate-700">
+                    Implementation Style
+                  </th>
+                  <th className="p-3 text-left text-xs uppercase tracking-wider text-slate-300 font-semibold border-b border-slate-700">
+                    Stack Usage
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {algorithmResults.map((algo, index) => (
+                {algorithmResults.map((algo, idx) => (
                   <tr 
-                    key={index} 
-                    className={algo.distance === Math.min(...algorithmResults.map(a => a.distance)) ? 'optimal' : ''}
-                    onClick={() => this.changeAlgorithmView(index)}
-                    style={{ cursor: 'pointer' }}
+                    key={idx} 
+                    className={`transition-colors border-b border-slate-800/50 hover:bg-violet-900/20 ${
+                      idx === currentAlgorithmIndex ? 'bg-violet-900/30 border-l-4 border-l-violet-500' : ''
+                    }`}
                   >
-                    <td>{algo.algorithm}</td>
-                    <td>
-                      <span className={`type-badge ${algo.type.toLowerCase()}`}>
+                    <td className="p-3 text-white font-medium">
+                      {algo.algorithm.split('(')[0]}
+                    </td>
+                    <td className="p-3">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
+                        algo.type === 'Recursive' 
+                          ? 'bg-pink-500/30 border border-pink-500/50 text-pink-200' 
+                          : 'bg-blue-500/30 border border-blue-500/50 text-blue-200'
+                      }`}>
                         {algo.type}
                       </span>
                     </td>
-                    <td><strong>{algo.distance}</strong></td>
-                    <td>{algo.time}</td>
-                    <td><code>{algo.complexity}</code></td>
-                    <td>
-                      {algo.distance === Math.min(...algorithmResults.map(a => a.distance)) ? 
-                        '✅ Yes' : '❌ No'}
+                    <td className="p-3 text-xs text-slate-400 italic">
+                      {algo.type === 'Recursive' ? 
+                        'Uses function call stack, elegant but may cause stack overflow' :
+                        'Uses explicit loops and data structures, more memory efficient'}
+                    </td>
+                    <td className="p-3 text-white">
+                      {algo.type === 'Recursive' ? 'O(n) call stack' : 'O(1) stack'}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            
-            <div className="performance-insights">
-              <h5>💡 Key Insights:</h5>
-              <ul>
-                <li>
-                  <strong>Brute Force (Recursive):</strong> Guarantees optimal solution but slowest - 
-                  Time grows factorially: 5 cities = 120 permutations, 10 cities = 3.6M permutations!
-                </li>
-                <li>
-                  <strong>Dynamic Programming (Iterative):</strong> Also optimal but much faster using memoization - 
-                  Stores intermediate results to avoid recalculation
-                </li>
-                <li>
-                  <strong>Nearest Neighbor (Iterative):</strong> Fastest but approximate - 
-                  Good for quick estimates but may miss optimal route by 10-25%
-                </li>
-                <li>
-                  <strong>Recursive vs Iterative:</strong> Brute Force uses recursion (elegant, natural for permutations), 
-                  while DP and NN use iteration (explicit control, better for large inputs)
-                </li>
-              </ul>
-            </div>
+          </div>
+        </div>
+      </>
+    )}
 
-            {/* Final result */}
-                </div> {currentRoute && (
-                              <div className="algorithm-details">
-                                <h3>{currentRoute.algorithm}</h3>
-                                
-                                <div className="result-stats">
-                                  <div className="stat-card">
-                                    <div className="stat-label">Distance</div>
-                                    <div className="stat-value">{currentRoute.distance} km</div>
-                                  </div>
-                                  <div className="stat-card">
-                                    <div className="stat-label">Time</div>
-                                    <div className="stat-value">{currentRoute.time} ms</div>
-                                  </div>
-                                  <div className="stat-card">
-                                    <div className="stat-label">Complexity</div>
-                                    <div className="stat-value">{currentRoute.complexity}</div>
-                                  </div>
-                                </div>
+    {/* Performance Comparison */}
+    <div className="mb-6">
+      <h4 className="text-xl font-bold text-slate-200 mb-4">📊 Performance Comparison</h4>
+      <div className="overflow-x-auto rounded-xl">
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="bg-violet-900/40">
+              <th className="p-3 text-left text-xs uppercase tracking-wider text-slate-300 font-semibold">Algorithm</th>
+              <th className="p-3 text-left text-xs uppercase tracking-wider text-slate-300 font-semibold">Type</th>
+              <th className="p-3 text-left text-xs uppercase tracking-wider text-slate-300 font-semibold">Distance (km)</th>
+              <th className="p-3 text-left text-xs uppercase tracking-wider text-slate-300 font-semibold">Time (ms)</th>
+              <th className="p-3 text-left text-xs uppercase tracking-wider text-slate-300 font-semibold">Complexity</th>
+              <th className="p-3 text-left text-xs uppercase tracking-wider text-slate-300 font-semibold">Optimal?</th>
+            </tr>
+          </thead>
+          <tbody>
+            {algorithmResults.map((algo, index) => (
+              <tr 
+                key={index} 
+                onClick={() => this.changeAlgorithmView(index)}
+                className={`cursor-pointer transition-all border-b border-slate-800/50 hover:bg-violet-900/20 ${
+                  algo.distance === Math.min(...algorithmResults.map(a => a.distance)) 
+                    ? 'bg-emerald-900/20 border-l-4 border-l-emerald-500' 
+                    : ''
+                }`}
+              >
+                <td className="p-3 text-white font-medium">{algo.algorithm}</td>
+                <td className="p-3">
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
+                    algo.type === 'Recursive' 
+                      ? 'bg-pink-500/30 border border-pink-500/50 text-pink-200' 
+                      : 'bg-blue-500/30 border border-blue-500/50 text-blue-200'
+                  }`}>
+                    {algo.type}
+                  </span>
+                </td>
+                <td className="p-3 text-white font-bold">{algo.distance}</td>
+                <td className="p-3 text-white">{algo.time}</td>
+                <td className="p-3">
+                  <code className="px-2 py-1 bg-slate-700/50 rounded text-violet-300 text-xs font-mono">
+                    {algo.complexity}
+                  </code>
+                </td>
+                <td className="p-3">
+                  {algo.distance === Math.min(...algorithmResults.map(a => a.distance)) ? 
+                    <span className="text-emerald-400 font-semibold">✅ Yes</span> : 
+                    <span className="text-slate-500">❌ No</span>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      
+      {/* Key Insights */}
+      <div className="mt-5 bg-slate-800/40 rounded-xl p-5 border-l-4 border-violet-500">
+        <h5 className="text-white font-bold text-lg mb-3">💡 Key Insights:</h5>
+        <ul className="space-y-3 text-slate-300 text-sm leading-relaxed">
+          <li className="border-b border-slate-700/50 pb-3">
+            <strong className="text-white bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent">Brute Force (Recursive):</strong> Guarantees optimal solution but slowest - 
+            Time grows factorially: 5 cities = 120 permutations, 10 cities = 3.6M permutations!
+          </li>
+          <li className="border-b border-slate-700/50 pb-3">
+            <strong className="text-white bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Dynamic Programming (Iterative):</strong> Also optimal but much faster using memoization - 
+            Stores intermediate results to avoid recalculation
+          </li>
+          <li className="border-b border-slate-700/50 pb-3">
+            <strong className="text-white bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">Nearest Neighbor (Iterative):</strong> Fastest but approximate - 
+            Good for quick estimates but may miss optimal route by 10-25%
+          </li>
+          <li>
+            <strong className="text-white bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">Recursive vs Iterative:</strong> Brute Force uses recursion (elegant, natural for permutations), 
+            while DP and NN use iteration (explicit control, better for large inputs)
+          </li>
+        </ul>
+      </div>
+    </div>
 
-                                <div className="route-display">
-                                  <strong>Route:</strong>
-                                  <div className="route-path">{currentRoute.routeString}</div>
-                                </div>
-
-                                <div className="algorithm-type-badge">
-                                  {currentRoute.type === 'recursive' ? '🔄 Recursive' : '➡️ Iterative'}
-                                </div>
-                              </div>
-                            )}
-
-                  <div className="comparison-section">
-                    <h4>Algorithm Comparison</h4>
-                    <table className="comparison-table">
-                      <thead>
-                        <tr>
-                          <th>Algorithm</th>
-                          <th>Distance (km)</th>
-                          <th>Time (ms)</th>
-                          <th>Type</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {algorithmResults.map((algo, index) => (
-                          <tr key={index} className={algo.distance === Math.min(...algorithmResults.map(a => a.distance)) ? 'optimal' : ''}>
-                            <td>{algo.algorithm}</td>
-                            <td>{algo.distance}</td>
-                            <td>{algo.time}</td>
-                            <td>{algo.type}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <button onClick={this.resetGame} className="btn-primary btn-large">
-                    🔄 Play Again
-                  </button>
-                </div>
-              )}
+    {/* Play Again Button */}
+    <button 
+      onClick={this.resetGame} 
+      className="w-full py-4 px-6 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white text-lg font-bold rounded-2xl shadow-lg shadow-violet-500/50 hover:shadow-violet-500/70 hover:-translate-y-1 transition-all duration-300"
+    >
+      🔄 Play Again
+    </button>
+  </div>
+)}
             </div>
           </div>
         )}
