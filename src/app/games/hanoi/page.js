@@ -184,124 +184,125 @@ const page = () => {
   }, [isGameWon, gameStatus]);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 p-4 md:p-10 font-sans">
-      <header className="text-center mb-10">
-        <h1 className="text-4xl md:text-5xl font-extrabold text-indigo-400 mb-2">
-          Tower of Hanoi Explorer
-        </h1>
-        <p className="text-xl text-gray-400">
-          Solve the classic puzzle with a custom solver and leaderboard.
-        </p>
-      </header>
+ <div className="min-h-screen bg-gray-900 text-gray-100 p-4 md:p-10 font-sans">
+  <header className="text-center mb-10">
+    <h1 className="text-4xl md:text-5xl font-extrabold text-indigo-400 mb-2">
+      Tower of Hanoi Explorer
+    </h1>
+    <p className="text-xl text-gray-400">
+      Solve the classic puzzle with a custom solver and leaderboard.
+    </p>
+  </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-        <div className="space-y-8">
-          {["SETUP", "WON", "SOLVING"].includes(gameStatus) ? (
-            <SetupPanel
-              playerName={playerName}
-              setPlayerName={setPlayerName}
-              P={P}
-              setP={setP}
-              N={N}
-              setN={setN}
-              gameStatus={gameStatus}
-              handleSetupGame={handleSetupGame}
-              selectedAlgorithm3P={selectedAlgorithm3P}
-              setSelectedAlgorithm3P={setSelectedAlgorithm3P}
-              selectedAlgorithm4P={selectedAlgorithm4P}
-              setSelectedAlgorithm4P={setSelectedAlgorithm4P}
-            />
-          ) : (
-            <StatusAndSolver
-              N={N}
-              P={P}
-              moveCount={moveCount}
-              optimalMoves={optimalMoves}
-              gameStatus={gameStatus}
-              currentMoveIndex={currentMoveIndex}
-              solutionMoves={solutionMoves}
-              generateSolution={generateSolution}
-              isAutoSolving={isAutoSolving}
-            />
-          )}
-          <Leaderboard
-            leaderboard={leaderboard}
-            isLoading={isLoading}
-            apiError={apiError}
-          />
-        </div>
+  {/* 3 Column Layout */}
+  <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 max-w-7xl mx-auto">
+    {/* --- Left Column: Setup Panel --- */}
+    <div className="space-y-8">
+      <SetupPanel
+        playerName={playerName}
+        setPlayerName={setPlayerName}
+        P={P}
+        setP={setP}
+        N={N}
+        setN={setN}
+        gameStatus={gameStatus}
+        handleSetupGame={handleSetupGame}
+        selectedAlgorithm3P={selectedAlgorithm3P}
+        setSelectedAlgorithm3P={setSelectedAlgorithm3P}
+        selectedAlgorithm4P={selectedAlgorithm4P}
+        setSelectedAlgorithm4P={setSelectedAlgorithm4P}
+      />
+    </div>
 
-        <div className="lg:col-span-2 p-4 bg-gray-800 rounded-2xl shadow-2xl flex flex-col items-center">
-          <h2 className="text-3xl font-bold mb-4 text-gray-100 text-center w-full">
-            {gameStatus === "SETUP"
-              ? "Ready to Start"
-              : `Game: ${N} Disks, ${P} Pegs`}
-          </h2>
+    {/* --- Middle Column: Game / Pegs Display --- */}
+    <div className="p-4 bg-gray-800 rounded-2xl shadow-2xl flex flex-col items-center">
+      <h2 className="text-3xl font-bold mb-4 text-gray-100 text-center w-full">
+        {gameStatus === "SETUP"
+          ? "Ready to Start"
+          : `Game: ${N} Disks, ${P} Pegs`}
+      </h2>
 
-          {N > 0 && pegs.length > 0 ? (
-            <PegsDisplay
-              pegs={pegs}
-              P={P}
-              N={N}
-              gameStatus={gameStatus}
-              selectedPeg={selectedPeg}
-              handlePegClick={handlePegClick}
-              isAutoSolving={isAutoSolving}
-            />
-          ) : (
-            <div className="h-80 flex items-center justify-center bg-gray-700 rounded-xl border-2 border-dashed border-gray-600 w-full">
-              <p className="text-gray-400 text-lg text-center">
-                Use the panel on the left to set the game parameters (N disks, P
-                pegs) and start a new game.
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {gameStatus === "WON" && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 p-10 rounded-2xl shadow-2xl text-center max-w-lg w-full">
-            <h3 className="text-4xl font-extrabold mb-4 text-indigo-400">
-              {isAutoSolving
-                ? "Solved by Algorithm!"
-                : "Congratulations! You Solved It!"}
-            </h3>
-            <p className="text-xl text-gray-100 mb-6">
-              Total Moves:{" "}
-              <span
-                className={`font-bold ${
-                  moveCount === optimalMoves ? "text-green-500" : "text-red-500"
-                }`}
-              >
-                {moveCount}
-              </span>{" "}
-              ( Optimal:{" "}
-              <span className="font-bold text-green-500">{optimalMoves}</span> )
-            </p>
-            {moveCount === optimalMoves ? (
-              <p className="text-lg text-green-500 font-semibold mb-6">
-                You achieved the minimum number of moves!
-              </p>
-            ) : (
-              <p className="text-lg text-red-500 font-semibold mb-6">
-                You used {moveCount - optimalMoves} extra moves.
-              </p>
-            )}
-            <button
-              onClick={() => {
-                setGameStatus("SETUP");
-                setPegs([]);
-                setN(MIN_DISKS);
-              }}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl transition duration-150 shadow-lg"
-            >
-              Play Again
-            </button>
-          </div>
+      {N > 0 && pegs.length > 0 ? (
+        <PegsDisplay
+          pegs={pegs}
+          P={P}
+          N={N}
+          gameStatus={gameStatus}
+          selectedPeg={selectedPeg}
+          handlePegClick={handlePegClick}
+          isAutoSolving={isAutoSolving}
+        />
+      ) : (
+        <div className="h-80 flex items-center justify-center bg-gray-700 rounded-xl border-2 border-dashed border-gray-600 w-full">
+          <p className="text-gray-400 text-lg text-center">
+            Use the panel on the left to set the game parameters (N disks, P pegs) and start a new game.
+          </p>
         </div>
       )}
+
+      {["PLAYING", "SOLVING"].includes(gameStatus) && (
+        <StatusAndSolver
+          N={N}
+          P={P}
+          moveCount={moveCount}
+          optimalMoves={optimalMoves}
+          gameStatus={gameStatus}
+          currentMoveIndex={currentMoveIndex}
+          solutionMoves={solutionMoves}
+          generateSolution={generateSolution}
+          isAutoSolving={isAutoSolving}
+        />
+      )}
     </div>
+
+    {/* --- Right Column: Leaderboard --- */}
+    <div className="space-y-8">
+      <Leaderboard
+        leaderboard={leaderboard}
+        isLoading={isLoading}
+        apiError={apiError}
+      />
+    </div>
+  </div>
+
+  {/* --- Game Won Modal --- */}
+  {gameStatus === "WON" && (
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900 p-10 rounded-2xl shadow-2xl text-center max-w-lg w-full">
+        <h3 className="text-4xl font-extrabold mb-4 text-indigo-400">
+          {isAutoSolving ? "Solved by Algorithm!" : "Congratulations! You Solved It!"}
+        </h3>
+        <p className="text-xl text-gray-100 mb-6">
+          Total Moves:{" "}
+          <span className={`font-bold ${moveCount === optimalMoves ? "text-green-500" : "text-red-500"}`}>
+            {moveCount}
+          </span>{" "}
+          ( Optimal: <span className="font-bold text-green-500">{optimalMoves}</span> )
+        </p>
+        {moveCount === optimalMoves ? (
+          <p className="text-lg text-green-500 font-semibold mb-6">
+            You achieved the minimum number of moves!
+          </p>
+        ) : (
+          <p className="text-lg text-red-500 font-semibold mb-6">
+            You used {moveCount - optimalMoves} extra moves.
+          </p>
+        )}
+        <button
+          onClick={() => {
+            setGameStatus("SETUP");
+            setPegs([]);
+            setN(MIN_DISKS);
+          }}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl transition duration-150 shadow-lg"
+        >
+          Play Again
+        </button>
+      </div>
+    </div>
+  )}
+</div>
+
   );
 };
 

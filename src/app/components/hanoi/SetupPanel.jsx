@@ -5,7 +5,7 @@ import {
   MAX_DISKS,
   ALGORITHM_OPTIONS_3P,
   ALGORITHM_OPTIONS_4P,
-} from "./hanoi-utils"; // FIXED: Changed to sibling import
+} from "./hanoi-utils";
 
 const SetupPanel = React.memo(
   ({
@@ -29,9 +29,7 @@ const SetupPanel = React.memo(
     const setSelectedAlgorithm =
       P === 3 ? setSelectedAlgorithm3P : setSelectedAlgorithm4P;
 
-    // Use useEffect to set a default algorithm when the component loads or P changes
     React.useEffect(() => {
-      // Added null/undefined check for the setter function before calling it
       if (P === 3 && !selectedAlgorithm3P && setSelectedAlgorithm3P) {
         setSelectedAlgorithm3P(ALGORITHM_OPTIONS_3P.RECURSIVE);
       } else if (P === 4 && !selectedAlgorithm4P && setSelectedAlgorithm4P) {
@@ -113,10 +111,10 @@ const SetupPanel = React.memo(
           </div>
         </div>
 
-        {/* Algorithm Selection (Conditional) */}
+        {/* Algorithm Selection */}
         <div className="space-y-2">
           <p className="text-sm font-semibold text-gray-400">
-            Optimal Solver Algorithm ({P} Pegs)
+            Solver Algorithm ({P} Pegs)
           </p>
           <div className="flex flex-col space-y-2">
             {Object.entries(currentAlgorithmOptions).map(([key, label]) => (
