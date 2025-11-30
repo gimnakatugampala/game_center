@@ -8,7 +8,7 @@ export async function POST(request) {
     
     const {
       playerName,
-      timestamp
+      email
     } = data;
 
     // Validate input
@@ -26,23 +26,47 @@ export async function POST(request) {
       );
     }
 
-    // Insert player entry into database
+    // Check if player already exists
+    const existingPlayer = await db.query(
+      'SELECT player_id, player_name FROM players WHERE player_name = ? LIMIT 1',
+      [playerName.trim()]
+    );
+
+    if (existingPlayer.length > 0) {
+      // Player exists, update last_active
+      const playerId = existingPlayer[0].player_id;
+      await db.execute(
+        'UPDATE players SET last_active = CURRENT_TIMESTAMP WHERE player_id = ?',
+        [playerId]
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: 'Welcome back!',
+        playerId: playerId,
+        playerName: existingPlayer[0].player_name,
+        isNewPlayer: false
+      });
+    }
+
+    // Insert new player
     const query = `
-      INSERT INTO tsp_players 
-      (player_name, entry_timestamp)
-      VALUES (?, ?)
+      INSERT INTO players 
+      (player_name, email, created_at, last_active)
+      VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     `;
 
     const result = await db.execute(query, [
       playerName.trim(),
-      timestamp
+      email || null
     ]);
 
     return NextResponse.json({
       success: true,
       message: 'Player registered successfully',
-      playerId: result.insertId,
-      playerName: playerName.trim()
+      playerId: result[0].insertId,
+      playerName: playerName.trim(),
+      isNewPlayer: true
     });
 
   } catch (error) {

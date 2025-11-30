@@ -141,7 +141,7 @@ getAvailableCities = () => {
   
   // If all cities visited, only home city is available
   const remainingCities = selectedCities.filter(c => !visitedCities.has(c));
-  if (remainingCities.length === 0 && !visitedCities.has(homeCity)) {
+  if (remainingCities.length === 0) {
     return [homeCity];
   }
   
@@ -166,15 +166,22 @@ calculateRouteDistance = () => {
 isRouteComplete = () => {
   const { playerRouteArray, homeCity, selectedCities } = this.state;
   
+  // Must have at least 3 cities (home -> city -> home)
+  if (playerRouteArray.length < 3) return false;
+  
   // Must start and end with home city
-  if (playerRouteArray.length === 0) return false;
   if (playerRouteArray[0] !== homeCity) return false;
   if (playerRouteArray[playerRouteArray.length - 1] !== homeCity) return false;
   
-  // Must visit all selected cities
-  const visitedCities = new Set(playerRouteArray.filter(c => c !== homeCity));
-  return selectedCities.every(city => visitedCities.has(city));
+  // Must visit all selected cities exactly once
+  const visitedCities = playerRouteArray.slice(1, -1); // Exclude first and last (both home)
+  const uniqueVisited = new Set(visitedCities);
+  
+  // Check if all selected cities are visited
+  return selectedCities.every(city => uniqueVisited.has(city)) && 
+         visitedCities.length === selectedCities.length;
 };
+
 
 // Get available cities for next selection
 getAvailableCities = () => {
@@ -213,14 +220,20 @@ calculateRouteDistance = () => {
 isRouteComplete = () => {
   const { playerRouteArray, homeCity, selectedCities } = this.state;
   
+  // Must have at least 3 cities (home -> city -> home)
+  if (playerRouteArray.length < 3) return false;
+  
   // Must start and end with home city
-  if (playerRouteArray.length === 0) return false;
   if (playerRouteArray[0] !== homeCity) return false;
   if (playerRouteArray[playerRouteArray.length - 1] !== homeCity) return false;
   
-  // Must visit all selected cities
-  const visitedCities = new Set(playerRouteArray.filter(c => c !== homeCity));
-  return selectedCities.every(city => visitedCities.has(city));
+  // Must visit all selected cities exactly once
+  const visitedCities = playerRouteArray.slice(1, -1); // Exclude first and last (both home)
+  const uniqueVisited = new Set(visitedCities);
+  
+  // Check if all selected cities are visited
+  return selectedCities.every(city => uniqueVisited.has(city)) && 
+         visitedCities.length === selectedCities.length;
 };
 
 calculateDistance = (pos1, pos2) => {
