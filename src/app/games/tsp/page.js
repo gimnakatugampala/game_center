@@ -205,6 +205,8 @@ getAvailableCities = () => {
 };
 
 
+// Add this method to your TSPGame component class in src/app/games/tsp/page.js
+
 saveToDatabaseCall = async (playerName, homeCity, selectedCities, playerRoute, playerDistance, isCorrect, algorithmResults) => {
   try {
     console.log('💾 Saving game data to database...');
@@ -261,6 +263,25 @@ saveToDatabaseCall = async (playerName, homeCity, selectedCities, playerRoute, p
     return null;
   }
 };
+
+// Also add this to track game start time in your startGame method:
+// Update your existing startGame method to include this line:
+startGame = () => {
+  const { selectedCities } = this.state;
+  
+  if (selectedCities.length < 2) {
+    this.setState({ error: 'Please select at least 2 cities to visit' });
+    return;
+  }
+  
+  this.setState({ 
+    gameState: 'playing', 
+    error: '',
+    gameStartTime: new Date().toISOString() // ✅ ADD THIS LINE
+  });
+};
+
+
 
 // Calculate distance for current route
 calculateRouteDistance = () => {
@@ -560,20 +581,23 @@ startGame = () => {
     return { route, distance: minDistance };
   };
 
- // Update the submitAnswer method in src/app/games/tsp/page.js
+// Replace your submitAnswer method with this ORIGINAL VERSION
+// This keeps the challenge of guessing the optimal distance
+
 submitAnswer = async () => {
   try {
     this.setState({ isLoading: true, error: '' });
 
     const { playerAnswer, playerRouteArray, homeCity, selectedCities, distances, playerName } = this.state;
 
+    // ✅ VALIDATE DISTANCE INPUT (ORIGINAL)
     if (!playerAnswer.trim()) {
       this.setState({ error: 'Please enter the shortest distance', isLoading: false });
       return;
     }
 
-    const distance = parseFloat(playerAnswer);
-    if (isNaN(distance) || distance <= 0) {
+    const playerGuessedDistance = parseFloat(playerAnswer);
+    if (isNaN(playerGuessedDistance) || playerGuessedDistance <= 0) {
       this.setState({ error: 'Please enter a valid positive number', isLoading: false });
       return;
     }
@@ -592,13 +616,15 @@ submitAnswer = async () => {
       return;
     }
 
+    // ✅ CALCULATE PLAYER'S ACTUAL ROUTE DISTANCE
+    const playerActualDistance = this.calculateRouteDistance();
+    
     // ✅ CONVERT ARRAY TO STRING FOR DATABASE
     const playerRoute = playerRouteArray.join('-');
 
     const citiesToVisit = [homeCity, ...selectedCities];
     const results = [];
 
-    // ... rest of your existing algorithm code ...
     // Algorithm 1: Nearest Neighbor
     const nn_start = performance.now();
     const nnResult = this.nearestNeighborAlgorithm(distances, citiesToVisit, homeCity);
@@ -644,19 +670,23 @@ submitAnswer = async () => {
       description: 'Optimal solution using memoization - stores subproblem results'
     });
 
+    // ✅ FIND OPTIMAL DISTANCE
     const optimalDistance = Math.min(...results.map(r => r.distance));
     const tolerance = 1;
-    const isCorrect = Math.abs(distance - optimalDistance) <= tolerance;
+    
+    // ✅ CHECK IF PLAYER'S GUESS MATCHES OPTIMAL
+    const isCorrect = Math.abs(playerGuessedDistance - optimalDistance) <= tolerance;
 
+    // ✅ SAVE TO DATABASE - Use player's guessed distance
     await this.saveToDatabaseCall(
-  playerName, 
-  homeCity, 
-  selectedCities, 
-  playerRoute, 
-  distance, 
-  isCorrect, 
-  results
-);
+      playerName, 
+      homeCity, 
+      selectedCities, 
+      playerRoute, 
+      playerGuessedDistance,  // Save what they guessed
+      isCorrect, 
+      results
+    );
 
     this.setState({
       algorithmResults: results,
@@ -664,7 +694,10 @@ submitAnswer = async () => {
       gameState: 'result',
       isLoading: false,
       showRoute: true,
-      currentAlgorithmIndex: 0
+      currentAlgorithmIndex: 0,
+      playerActualDistance: playerActualDistance, // Store for display
+      playerGuessedDistance: playerGuessedDistance, // Store for display
+      optimalDistance: optimalDistance // Store for display
     });
 
   } catch (err) {
@@ -851,188 +884,226 @@ submitAnswer = async () => {
                 </div>
               )}
 
-              {/* Playing Phase */}
-              {gameState === 'playing' && (
-                <div className="game-panel">
-                  <div className="panel-header">
-                    <h2>Your Challenge</h2>
-                  </div>
-
-                  <div className="info-box">
-                    <div className="info-item">
-                      <span className="info-label">Home:</span>
-                      <span className="info-value">{homeCity}</span>
-                    </div>
-                    <div className="info-item">
-                      <span className="info-label">Visit:</span>
-                      <span className="info-value">{selectedCities.join(', ')}</span>
-                    </div>
-                  </div>
-
-                  <div className="challenge-box">
-                    <h3>🎯 Find the Shortest Route!</h3>
-                    <p>Calculate the shortest distance to visit all selected cities and return home.</p>
-                  </div>
-
-                  <div className="input-group">
-                    <label>Shortest Distance (km):</label>
-                    <input
-                      type="number"
-                      value={playerAnswer}
-                      onChange={(e) => this.setState({ playerAnswer: e.target.value, error: '' })}
-                      placeholder="Enter distance"
-                      className="input-field"
-                      min="0"
-                      step="0.1"
-                    />
-                  </div>
-
-                 <div className="route-builder-section">
-            <h3>Build Your Route</h3>
             
-            {/* Current Route Display */}
-            <div className="current-route-display">
-              <div className="route-label">Current Route:</div>
-              <div className="route-cities">
-                {playerRouteArray.length === 0 ? (
-                  <span className="route-empty">Start by selecting {homeCity}</span>
-                ) : (
-                  playerRouteArray.map((city, index) => (
-                    <React.Fragment key={index}>
-                      <span className={`route-city ${city === homeCity ? 'home-city' : ''}`}>
-                        {city}
-                      </span>
-                      {index < playerRouteArray.length - 1 && (
-                        <span className="route-arrow">→</span>
-                      )}
-                    </React.Fragment>
-                  ))
-                )}
+   {/* Result Phase */} 
+
+          {/* Playing Phase */}
+          {gameState === 'playing' && (
+            <div className="game-panel">
+              <div className="panel-header">
+                <h2>Your Challenge</h2>
               </div>
-              
-              {/* Route Distance Calculator */}
-              {playerRouteArray.length >= 2 && (
-                <div className="route-distance-display">
-                  <span className="distance-label">Current Distance:</span>
-                  <span className="distance-value">{this.calculateRouteDistance()} km</span>
+
+              <div className="info-box">
+                <div className="info-item">
+                  <span className="info-label">Home:</span>
+                  <span className="info-value">{homeCity}</span>
                 </div>
-              )}
-            </div>
+                <div className="info-item">
+                  <span className="info-label">Visit:</span>
+                  <span className="info-value">{selectedCities.join(', ')}</span>
+                </div>
+              </div>
 
-      {/* Route Building Controls */}
-      <div className="route-controls">
-        <div className="control-row">
-          <label htmlFor="citySelect">Select next city:</label>
-          <select
-            id="citySelect"
-            className="city-select"
-            value=""
-            onChange={(e) => {
-              if (e.target.value) {
-                this.addCityToRoute(e.target.value);
-                e.target.value = ''; // Reset select
-              }
-            }}
-          >
-            <option value="">-- Select City --</option>
-            {this.getAvailableCities().map(city => (
-              <option key={city} value={city}>
-                {city} {city === homeCity ? '(Home)' : ''}
-              </option>
-            ))}
-          </select>
-          
-          <button
-            onClick={() => {
-              const select = document.getElementById('citySelect');
-              if (select.value) {
-                this.addCityToRoute(select.value);
-                select.value = '';
-              }
-            }}
-            className="btn-add-city"
-            disabled={this.getAvailableCities().length === 0}
-          >
-            Add
-          </button>
-        </div>
+              <div className="challenge-box">
+                <h3>🎯 Your Challenge</h3>
+                <p><strong>Step 1:</strong> Build your route visiting all cities<br/>
+                  <strong>Step 2:</strong> Calculate and enter the shortest possible distance<br/>
+                  <strong>Step 3:</strong> Submit and see if you found the optimal solution!</p>
+              </div>
 
-        <div className="control-buttons">
-          <button
-            onClick={this.removeLastCity}
-            className="btn-secondary"
-            disabled={playerRouteArray.length === 0}
-          >
-            Remove Last
-          </button>
-          
-          <button
-            onClick={this.returnHome}
-            className="btn-return-home"
-            disabled={
-              playerRouteArray.length === 0 || 
-              playerRouteArray[playerRouteArray.length - 1] === homeCity
-            }
-          >
-            Return Home
-          </button>
-        </div>
-      </div>
-
-      {/* Route Completion Status */}
-      <div className="route-status">
-        {this.isRouteComplete() ? (
-          <div className="status-complete">✅ Route Complete!</div>
-        ) : (
-          <div className="status-incomplete">
-            {playerRouteArray.length === 0 
-              ? '⚠️ Start building your route'
-              : '⚠️ Route incomplete - visit all cities and return home'}
-          </div>
-        )}
-      </div>
-    </div>
-
-                  {/* Distance Reference Table */}
-                  <div className="distance-reference">
-                    <h4>Distance Reference</h4>
-                    <div className="distance-scroll">
-                      <table className="distance-table">
-                        <thead>
-                          <tr>
-                            <th>From</th>
-                            <th>To</th>
-                            <th>Distance (km)</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {[homeCity, ...selectedCities].map(from => 
-                            [homeCity, ...selectedCities]
-                              .filter(to => from !== to)
-                              .map(to => (
-                                <tr key={`${from}-${to}`}>
-                                  <td>{from}</td>
-                                  <td>{to}</td>
-                                  <td>{distances[from]?.[to]}</td>
-                                </tr>
-                              ))
+              {/* Route Builder Section */}
+              <div className="route-builder-section">
+                <h3>Build Your Route</h3>
+                
+                {/* Current Route Display */}
+                <div className="current-route-display">
+                  <div className="route-label">Current Route:</div>
+                  <div className="route-cities">
+                    {playerRouteArray.length === 0 ? (
+                      <span className="route-empty">Start by selecting {homeCity}</span>
+                    ) : (
+                      playerRouteArray.map((city, index) => (
+                        <React.Fragment key={index}>
+                          <span className={`route-city ${city === homeCity ? 'home-city' : ''}`}>
+                            {city}
+                          </span>
+                          {index < playerRouteArray.length - 1 && (
+                            <span className="route-arrow">→</span>
                           )}
-                        </tbody>
-                      </table>
+                        </React.Fragment>
+                      ))
+                    )}
+                  </div>
+                  
+                  {/* Route Distance Calculator */}
+                  {playerRouteArray.length >= 2 && (
+                    <div className="route-distance-display">
+                      <span className="distance-label">Your Route Distance:</span>
+                      <span className="distance-value">{this.calculateRouteDistance()} km</span>
                     </div>
+                  )}
+                </div>
+
+                {/* Route Building Controls */}
+                <div className="route-controls">
+                  <div className="control-row">
+                    <label htmlFor="citySelect">Select next city:</label>
+                    <select
+                      id="citySelect"
+                      className="city-select"
+                      value=""
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          this.addCityToRoute(e.target.value);
+                          e.target.value = '';
+                        }
+                      }}
+                    >
+                      <option value="">-- Select City --</option>
+                      {this.getAvailableCities().map(city => (
+                        <option key={city} value={city}>
+                          {city} {city === homeCity ? '(Home)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                    
+                    <button
+                      onClick={() => {
+                        const select = document.getElementById('citySelect');
+                        if (select.value) {
+                          this.addCityToRoute(select.value);
+                          select.value = '';
+                        }
+                      }}
+                      className="btn-add-city"
+                      disabled={this.getAvailableCities().length === 0}
+                    >
+                      Add
+                    </button>
                   </div>
 
-                  {error && <div className="error-alert">{error}</div>}
+                  <div className="control-buttons">
+                    <button
+                      onClick={this.removeLastCity}
+                      className="btn-secondary"
+                      disabled={playerRouteArray.length === 0}
+                    >
+                      ← Remove Last
+                    </button>
+                    
+                    <button
+                      onClick={this.clearRoute}
+                      className="btn-secondary"
+                      disabled={playerRouteArray.length === 0}
+                    >
+                      🔄 Clear Route
+                    </button>
+                  </div>
 
-                <button 
+                  <button
+                    onClick={this.returnHome}
+                    className="btn-return-home"
+                    disabled={
+                      playerRouteArray.length === 0 || 
+                      playerRouteArray[playerRouteArray.length - 1] === homeCity
+                    }
+                  >
+                    🏠 Return Home
+                  </button>
+                </div>
+
+                {/* Route Completion Status */}
+                <div className="route-status">
+                  {this.isRouteComplete() ? (
+                    <div className="status-complete">
+                      ✅ Route Complete! Your route distance: {this.calculateRouteDistance()} km
+                    </div>
+                  ) : (
+                    <div className="status-incomplete">
+                      {playerRouteArray.length === 0 
+                        ? '⚠️ Start building your route by selecting the home city'
+                        : '⚠️ Route incomplete - visit all cities and return home'}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Challenge: Enter Shortest Distance */}
+              <div className="shortest-distance-challenge">
+                <h3>💡 Now Calculate the Shortest Distance</h3>
+                <p className="challenge-instruction">
+                  Can you find a <strong>shorter route</strong> than your current route? 
+                  Think about different orders and calculate the optimal distance!
+                </p>
+                
+                <div className="input-group">
+                  <label htmlFor="shortestDistance">What is the shortest possible distance? (km)</label>
+                  <input
+                    id="shortestDistance"
+                    type="number"
+                    value={playerAnswer}
+                    onChange={(e) => this.setState({ playerAnswer: e.target.value, error: '' })}
+                    placeholder="Enter your answer (e.g., 215)"
+                    className="input-field"
+                    min="0"
+                    step="0.1"
+                  />
+                  <small className="hint">
+                    💡 Hint: Your current route is {this.isRouteComplete() ? this.calculateRouteDistance() : '?'} km. 
+                    Can you do better?
+                  </small>
+                </div>
+              </div>
+
+              {/* Distance Reference Table */}
+              <div className="distance-reference">
+                <h4>📏 Distance Reference</h4>
+                <div className="distance-scroll">
+                  <table className="distance-table">
+                    <thead>
+                      <tr>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>Distance (km)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[homeCity, ...selectedCities].map(from => 
+                        [homeCity, ...selectedCities]
+                          .filter(to => from !== to)
+                          .map(to => (
+                            <tr key={`${from}-${to}`}>
+                              <td>{from}</td>
+                              <td>{to}</td>
+                              <td>{distances[from]?.[to]}</td>
+                            </tr>
+                          ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {error && <div className="error-alert">{error}</div>}
+
+              <button 
                 onClick={this.submitAnswer} 
                 className="btn-primary btn-large"
-                disabled={isLoading || !playerAnswer || !this.isRouteComplete()}  // ✅ NEW CODE
+                disabled={isLoading || !this.isRouteComplete() || !playerAnswer}
               >
-                {isLoading ? '⏳ Calculating...' : 'Submit Answer'}
+                {isLoading ? '⏳ Calculating...' : '✅ Submit Your Answer'}
               </button>
-                </div>
-              )}
+
+              <div className="helper-text" style={{ textAlign: 'center', marginTop: '10px' }}>
+                {!this.isRouteComplete() 
+                  ? 'Complete your route first' 
+                  : !playerAnswer
+                  ? 'Enter the shortest distance to submit'
+                  : '✅ Ready to submit!'}
+              </div>
+            </div>
+          )}
 
               {/* Result Phase */}
               {gameState === 'result' && (
@@ -1048,6 +1119,64 @@ submitAnswer = async () => {
                     </p>
                   </div>
 
+                  {/* Player Performance Analysis */}
+<div className="player-performance-analysis">
+  <h3>📊 Your Performance</h3>
+  
+  <div className="performance-grid">
+    <div className="performance-card">
+      <div className="performance-label">Your Route Distance</div>
+      <div className="performance-value actual">
+        {this.state.playerActualDistance} km
+      </div>
+      <div className="performance-detail">
+        Route: {playerRouteArray.join(' → ')}
+      </div>
+    </div>
+    
+    <div className="performance-card">
+      <div className="performance-label">Your Guess</div>
+      <div className="performance-value guess">
+        {this.state.playerGuessedDistance} km
+      </div>
+      <div className="performance-detail">
+        {Math.abs(this.state.playerGuessedDistance - this.state.optimalDistance) <= 1 
+          ? '🎯 Excellent guess!' 
+          : `Off by ${Math.abs(this.state.playerGuessedDistance - this.state.optimalDistance).toFixed(1)} km`}
+      </div>
+    </div>
+    
+    <div className="performance-card optimal">
+      <div className="performance-label">Optimal Distance</div>
+      <div className="performance-value optimal">
+        {this.state.optimalDistance} km
+      </div>
+      <div className="performance-detail">
+        {this.state.playerActualDistance === this.state.optimalDistance 
+          ? '✅ You found it!' 
+          : `${(this.state.playerActualDistance - this.state.optimalDistance).toFixed(1)} km longer`}
+      </div>
+    </div>
+  </div>
+
+  {/* Insight Message */}
+  <div className="performance-insight">
+    {result === 'win' ? (
+      <div className="insight-success">
+        <strong>🎉 Outstanding!</strong> You correctly identified the shortest distance!
+        {this.state.playerActualDistance === this.state.optimalDistance && (
+          <span> And you found the optimal route on your first try!</span>
+        )}
+      </div>
+    ) : (
+      <div className="insight-info">
+        <strong>💡 Learning Opportunity:</strong> Compare your route with the optimal solutions below 
+        to see how different algorithms approach this problem.
+      </div>
+    )}
+  </div>
+</div>
+
                   <div className="algorithm-tabs">
                     {algorithmResults.map((algo, index) => (
                       <button
@@ -1062,224 +1191,224 @@ submitAnswer = async () => {
 
                  {/* // Add this section in the Result Phase of page.js, after the algorithm-details div */}
 
-{currentRoute && (
-  <>
-    <div className="algorithm-details">
-      <h3>{currentRoute.algorithm}</h3>
-      
-      <div className="algorithm-description">
-        <p>{currentRoute.description}</p>
-      </div>
-      
-      <div className="result-stats">
-        <div className="stat-card">
-          <div className="stat-label">Distance</div>
-          <div className="stat-value">{currentRoute.distance} km</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Time</div>
-          <div className="stat-value">{currentRoute.time} ms</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Complexity</div>
-          <div className="stat-value">{currentRoute.complexity}</div>
-        </div>
-      </div>
+            {currentRoute && (
+              <>
+                <div className="algorithm-details">
+                  <h3>{currentRoute.algorithm}</h3>
+                  
+                  <div className="algorithm-description">
+                    <p>{currentRoute.description}</p>
+                  </div>
+                  
+                  <div className="result-stats">
+                    <div className="stat-card">
+                      <div className="stat-label">Distance</div>
+                      <div className="stat-value">{currentRoute.distance} km</div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-label">Time</div>
+                      <div className="stat-value">{currentRoute.time} ms</div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-label">Complexity</div>
+                      <div className="stat-value">{currentRoute.complexity}</div>
+                    </div>
+                  </div>
 
-      <div className="route-display">
-        <strong>Route:</strong>
-        <div className="route-path">{currentRoute.routeString}</div>
-      </div>
+                  <div className="route-display">
+                    <strong>Route:</strong>
+                    <div className="route-path">{currentRoute.routeString}</div>
+                  </div>
 
-      <div className="algorithm-type-badge">
-        {currentRoute.type === 'Recursive' ? '🔄 Recursive Implementation' : '➡️ Iterative Implementation'}
-      </div>
-    </div>
+                  <div className="algorithm-type-badge">
+                    {currentRoute.type === 'Recursive' ? '🔄 Recursive Implementation' : '➡️ Iterative Implementation'}
+                  </div>
+                </div>
 
-    {/* NEW: Complexity Analysis Section */}
-    <div className="complexity-analysis-section">
-      <h4>🔍 Complexity Analysis</h4>
-      <div className="complexity-grid">
-        <div className="complexity-card">
-          <div className="complexity-title">Time Complexity</div>
-          <div className="complexity-value">{currentRoute.complexity}</div>
-          <div className="complexity-explanation">
-            {currentRoute.algorithm.includes('Nearest') && 
-              'For each city, searches all remaining unvisited cities'}
-            {currentRoute.algorithm.includes('Brute') && 
-              'Generates all (n-1)! permutations of cities to find optimal route'}
-            {currentRoute.algorithm.includes('Dynamic') && 
-              'Uses bitmask (2ⁿ states) and checks n cities for each state'}
-          </div>
-        </div>
-        
-        <div className="complexity-card">
-          <div className="complexity-title">Space Complexity</div>
-          <div className="complexity-value">
-            {currentRoute.algorithm.includes('Nearest') && 'O(n)'}
-            {currentRoute.algorithm.includes('Brute') && 'O(n)'}
-            {currentRoute.algorithm.includes('Dynamic') && 'O(n × 2ⁿ)'}
-          </div>
-          <div className="complexity-explanation">
-            {currentRoute.algorithm.includes('Nearest') && 
-              'Stores only the current route and unvisited set'}
-            {currentRoute.algorithm.includes('Brute') && 
-              'Recursion stack depth is at most n'}
-            {currentRoute.algorithm.includes('Dynamic') && 
-              'Memoization table stores all visited states'}
-          </div>
-        </div>
-
-        <div className="complexity-card">
-          <div className="complexity-title">Optimality</div>
-          <div className="complexity-value">
-            {currentRoute.algorithm.includes('Nearest') && '❌ Approximate'}
-            {currentRoute.algorithm.includes('Brute') && '✅ Optimal'}
-            {currentRoute.algorithm.includes('Dynamic') && '✅ Optimal'}
-          </div>
-          <div className="complexity-explanation">
-            {currentRoute.algorithm.includes('Nearest') && 
-              'Heuristic approach - may not find shortest path'}
-            {currentRoute.algorithm.includes('Brute') && 
-              'Exhaustive search guarantees optimal solution'}
-            {currentRoute.algorithm.includes('Dynamic') && 
-              'Systematic search with memoization guarantees optimality'}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {/* NEW: Recursive vs Iterative Comparison */}
-    <div className="recursive-iterative-comparison">
-      <h4>🔄 Recursive vs Iterative Comparison</h4>
-      <table className="comparison-simple-table">
-        <thead>
-          <tr>
-            <th>Algorithm</th>
-            <th>Type</th>
-            <th>Implementation Style</th>
-            <th>Stack Usage</th>
-          </tr>
-        </thead>
-        <tbody>
-          {algorithmResults.map((algo, idx) => (
-            <tr key={idx} className={idx === currentAlgorithmIndex ? 'highlight' : ''}>
-              <td>{algo.algorithm.split('(')[0]}</td>
-              <td>
-                <span className={`type-badge ${algo.type.toLowerCase()}`}>
-                  {algo.type}
-                </span>
-              </td>
-              <td className="implementation-desc">
-                {algo.type === 'Recursive' ? 
-                  'Uses function call stack, elegant but may cause stack overflow' :
-                  'Uses explicit loops and data structures, more memory efficient'}
-              </td>
-              <td>
-                {algo.type === 'Recursive' ? 
-                  'O(n) call stack' :
-                  'O(1) stack'}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </>
-)}
-
-{/* Existing Comparison Section - Update to show more details */}
-<div className="comparison-section">
-  <h4>📊 Performance Comparison</h4>
-  <table className="comparison-table">
-    <thead>
-      <tr>
-        <th>Algorithm</th>
-        <th>Type</th>
-        <th>Distance (km)</th>
-        <th>Time (ms)</th>
-        <th>Complexity</th>
-        <th>Optimal?</th>
-      </tr>
-    </thead>
-    <tbody>
-      {algorithmResults.map((algo, index) => (
-        <tr 
-          key={index} 
-          className={algo.distance === Math.min(...algorithmResults.map(a => a.distance)) ? 'optimal' : ''}
-          onClick={() => this.changeAlgorithmView(index)}
-          style={{ cursor: 'pointer' }}
-        >
-          <td>{algo.algorithm}</td>
-          <td>
-            <span className={`type-badge ${algo.type.toLowerCase()}`}>
-              {algo.type}
-            </span>
-          </td>
-          <td><strong>{algo.distance}</strong></td>
-          <td>{algo.time}</td>
-          <td><code>{algo.complexity}</code></td>
-          <td>
-            {algo.distance === Math.min(...algorithmResults.map(a => a.distance)) ? 
-              '✅ Yes' : '❌ No'}
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-  
-  <div className="performance-insights">
-    <h5>💡 Key Insights:</h5>
-    <ul>
-      <li>
-        <strong>Brute Force (Recursive):</strong> Guarantees optimal solution but slowest - 
-        Time grows factorially: 5 cities = 120 permutations, 10 cities = 3.6M permutations!
-      </li>
-      <li>
-        <strong>Dynamic Programming (Iterative):</strong> Also optimal but much faster using memoization - 
-        Stores intermediate results to avoid recalculation
-      </li>
-      <li>
-        <strong>Nearest Neighbor (Iterative):</strong> Fastest but approximate - 
-        Good for quick estimates but may miss optimal route by 10-25%
-      </li>
-      <li>
-        <strong>Recursive vs Iterative:</strong> Brute Force uses recursion (elegant, natural for permutations), 
-        while DP and NN use iteration (explicit control, better for large inputs)
-      </li>
-    </ul>
-  </div>
-
-  {/* Final result */}
-      </div> {currentRoute && (
-                    <div className="algorithm-details">
-                      <h3>{currentRoute.algorithm}</h3>
-                      
-                      <div className="result-stats">
-                        <div className="stat-card">
-                          <div className="stat-label">Distance</div>
-                          <div className="stat-value">{currentRoute.distance} km</div>
-                        </div>
-                        <div className="stat-card">
-                          <div className="stat-label">Time</div>
-                          <div className="stat-value">{currentRoute.time} ms</div>
-                        </div>
-                        <div className="stat-card">
-                          <div className="stat-label">Complexity</div>
-                          <div className="stat-value">{currentRoute.complexity}</div>
-                        </div>
-                      </div>
-
-                      <div className="route-display">
-                        <strong>Route:</strong>
-                        <div className="route-path">{currentRoute.routeString}</div>
-                      </div>
-
-                      <div className="algorithm-type-badge">
-                        {currentRoute.type === 'recursive' ? '🔄 Recursive' : '➡️ Iterative'}
+                {/* NEW: Complexity Analysis Section */}
+                <div className="complexity-analysis-section">
+                  <h4>🔍 Complexity Analysis</h4>
+                  <div className="complexity-grid">
+                    <div className="complexity-card">
+                      <div className="complexity-title">Time Complexity</div>
+                      <div className="complexity-value">{currentRoute.complexity}</div>
+                      <div className="complexity-explanation">
+                        {currentRoute.algorithm.includes('Nearest') && 
+                          'For each city, searches all remaining unvisited cities'}
+                        {currentRoute.algorithm.includes('Brute') && 
+                          'Generates all (n-1)! permutations of cities to find optimal route'}
+                        {currentRoute.algorithm.includes('Dynamic') && 
+                          'Uses bitmask (2ⁿ states) and checks n cities for each state'}
                       </div>
                     </div>
-                  )}
+                    
+                    <div className="complexity-card">
+                      <div className="complexity-title">Space Complexity</div>
+                      <div className="complexity-value">
+                        {currentRoute.algorithm.includes('Nearest') && 'O(n)'}
+                        {currentRoute.algorithm.includes('Brute') && 'O(n)'}
+                        {currentRoute.algorithm.includes('Dynamic') && 'O(n × 2ⁿ)'}
+                      </div>
+                      <div className="complexity-explanation">
+                        {currentRoute.algorithm.includes('Nearest') && 
+                          'Stores only the current route and unvisited set'}
+                        {currentRoute.algorithm.includes('Brute') && 
+                          'Recursion stack depth is at most n'}
+                        {currentRoute.algorithm.includes('Dynamic') && 
+                          'Memoization table stores all visited states'}
+                      </div>
+                    </div>
+
+                    <div className="complexity-card">
+                      <div className="complexity-title">Optimality</div>
+                      <div className="complexity-value">
+                        {currentRoute.algorithm.includes('Nearest') && '❌ Approximate'}
+                        {currentRoute.algorithm.includes('Brute') && '✅ Optimal'}
+                        {currentRoute.algorithm.includes('Dynamic') && '✅ Optimal'}
+                      </div>
+                      <div className="complexity-explanation">
+                        {currentRoute.algorithm.includes('Nearest') && 
+                          'Heuristic approach - may not find shortest path'}
+                        {currentRoute.algorithm.includes('Brute') && 
+                          'Exhaustive search guarantees optimal solution'}
+                        {currentRoute.algorithm.includes('Dynamic') && 
+                          'Systematic search with memoization guarantees optimality'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* NEW: Recursive vs Iterative Comparison */}
+                <div className="recursive-iterative-comparison">
+                  <h4>🔄 Recursive vs Iterative Comparison</h4>
+                  <table className="comparison-simple-table">
+                    <thead>
+                      <tr>
+                        <th>Algorithm</th>
+                        <th>Type</th>
+                        <th>Implementation Style</th>
+                        <th>Stack Usage</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {algorithmResults.map((algo, idx) => (
+                        <tr key={idx} className={idx === currentAlgorithmIndex ? 'highlight' : ''}>
+                          <td>{algo.algorithm.split('(')[0]}</td>
+                          <td>
+                            <span className={`type-badge ${algo.type.toLowerCase()}`}>
+                              {algo.type}
+                            </span>
+                          </td>
+                          <td className="implementation-desc">
+                            {algo.type === 'Recursive' ? 
+                              'Uses function call stack, elegant but may cause stack overflow' :
+                              'Uses explicit loops and data structures, more memory efficient'}
+                          </td>
+                          <td>
+                            {algo.type === 'Recursive' ? 
+                              'O(n) call stack' :
+                              'O(1) stack'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+
+          {/* Existing Comparison Section - Update to show more details */}
+          <div className="comparison-section">
+            <h4>📊 Performance Comparison</h4>
+            <table className="comparison-table">
+              <thead>
+                <tr>
+                  <th>Algorithm</th>
+                  <th>Type</th>
+                  <th>Distance (km)</th>
+                  <th>Time (ms)</th>
+                  <th>Complexity</th>
+                  <th>Optimal?</th>
+                </tr>
+              </thead>
+              <tbody>
+                {algorithmResults.map((algo, index) => (
+                  <tr 
+                    key={index} 
+                    className={algo.distance === Math.min(...algorithmResults.map(a => a.distance)) ? 'optimal' : ''}
+                    onClick={() => this.changeAlgorithmView(index)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <td>{algo.algorithm}</td>
+                    <td>
+                      <span className={`type-badge ${algo.type.toLowerCase()}`}>
+                        {algo.type}
+                      </span>
+                    </td>
+                    <td><strong>{algo.distance}</strong></td>
+                    <td>{algo.time}</td>
+                    <td><code>{algo.complexity}</code></td>
+                    <td>
+                      {algo.distance === Math.min(...algorithmResults.map(a => a.distance)) ? 
+                        '✅ Yes' : '❌ No'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            
+            <div className="performance-insights">
+              <h5>💡 Key Insights:</h5>
+              <ul>
+                <li>
+                  <strong>Brute Force (Recursive):</strong> Guarantees optimal solution but slowest - 
+                  Time grows factorially: 5 cities = 120 permutations, 10 cities = 3.6M permutations!
+                </li>
+                <li>
+                  <strong>Dynamic Programming (Iterative):</strong> Also optimal but much faster using memoization - 
+                  Stores intermediate results to avoid recalculation
+                </li>
+                <li>
+                  <strong>Nearest Neighbor (Iterative):</strong> Fastest but approximate - 
+                  Good for quick estimates but may miss optimal route by 10-25%
+                </li>
+                <li>
+                  <strong>Recursive vs Iterative:</strong> Brute Force uses recursion (elegant, natural for permutations), 
+                  while DP and NN use iteration (explicit control, better for large inputs)
+                </li>
+              </ul>
+            </div>
+
+            {/* Final result */}
+                </div> {currentRoute && (
+                              <div className="algorithm-details">
+                                <h3>{currentRoute.algorithm}</h3>
+                                
+                                <div className="result-stats">
+                                  <div className="stat-card">
+                                    <div className="stat-label">Distance</div>
+                                    <div className="stat-value">{currentRoute.distance} km</div>
+                                  </div>
+                                  <div className="stat-card">
+                                    <div className="stat-label">Time</div>
+                                    <div className="stat-value">{currentRoute.time} ms</div>
+                                  </div>
+                                  <div className="stat-card">
+                                    <div className="stat-label">Complexity</div>
+                                    <div className="stat-value">{currentRoute.complexity}</div>
+                                  </div>
+                                </div>
+
+                                <div className="route-display">
+                                  <strong>Route:</strong>
+                                  <div className="route-path">{currentRoute.routeString}</div>
+                                </div>
+
+                                <div className="algorithm-type-badge">
+                                  {currentRoute.type === 'recursive' ? '🔄 Recursive' : '➡️ Iterative'}
+                                </div>
+                              </div>
+                            )}
 
                   <div className="comparison-section">
                     <h4>Algorithm Comparison</h4>
