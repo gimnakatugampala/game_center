@@ -785,7 +785,7 @@ submitAnswer = async () => {
                 Start Game →
               </button>
 
-              <div className="game-features">
+              {/* <div className="game-features">
                 <div className="feature-item">
                   <span className="feature-icon">🎯</span>
                   <span>Interactive Map</span>
@@ -798,7 +798,7 @@ submitAnswer = async () => {
                   <span className="feature-icon">📊</span>
                   <span>Performance Analysis</span>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         )}
