@@ -183,10 +183,11 @@
   font-size: 1.2rem;
 }
 
+/* Helper text styling */
 .helper-text {
-  color: #a0aec0;
   font-size: 0.9rem;
-  margin-bottom: 15px;
+  color: #a0aec0;
+  font-style: italic;
 }
 
 .city-grid {
@@ -284,23 +285,31 @@
 .challenge-box h3 {
   margin: 0 0 10px 0;
   font-size: 1.3rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.challenge-box p {
-  margin: 0;
-  color: #cbd5e0;
-  line-height: 1.5;
-}
-
-/* Distance Reference */
-.distance-reference {
-  margin: 20px 0;
-}
-
+/* Distance reference table header */
 .distance-reference h4 {
   margin-bottom: 10px;
-  color: #cbd5e0;
-  font-size: 1rem;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .control-buttons {
+    grid-template-columns: 1fr;
+  }
+  
+  .status-complete,
+  .status-incomplete {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
 }
 
 .distance-scroll {
@@ -1267,6 +1276,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  margin-bottom: 10px;
 }
 
 .btn-secondary {
@@ -1291,7 +1301,9 @@
   cursor: not-allowed;
 }
 
+/* Return home button should be full width below */
 .btn-return-home {
+  width: 100%;
   padding: 12px 20px;
   border: 2px solid rgba(255, 215, 0, 0.5);
   border-radius: 8px;
@@ -1306,6 +1318,7 @@
   background: rgba(255, 215, 0, 0.3);
   border-color: #ffd700;
   transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
 }
 
 .btn-return-home:disabled {
@@ -1313,20 +1326,34 @@
   cursor: not-allowed;
 }
 
+
+
 /* Route Status */
 .route-status {
   margin-top: 15px;
   text-align: center;
 }
 
+/* Enhanced status display */
 .status-complete {
-  padding: 12px;
+  padding: 15px;
   background: rgba(16, 185, 129, 0.2);
   border: 2px solid rgba(16, 185, 129, 0.5);
-  border-radius: 8px;
+  border-radius: 10px;
   color: #6ee7b7;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 1.1rem;
+  text-align: center;
+  animation: pulseSuccess 2s ease-in-out infinite;
+}
+
+@keyframes pulseSuccess {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px 10px rgba(16, 185, 129, 0);
+  }
 }
 
 .status-incomplete {
@@ -1337,6 +1364,7 @@
   color: #fcd34d;
   font-weight: 700;
   font-size: 0.95rem;
+  text-align: center;
 }
 
 /* Responsive */
@@ -1351,5 +1379,434 @@
   
   .control-buttons {
     grid-template-columns: 1fr;
+  }
+}
+
+
+/* Add these additional styles to your tsp.css file */
+
+/* Shortest Distance Challenge Section */
+.shortest-distance-challenge {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+  border: 2px solid rgba(251, 191, 36, 0.3);
+}
+
+.shortest-distance-challenge h3 {
+  margin: 0 0 15px 0;
+  color: #fbbf24;
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+.challenge-instruction {
+  color: #cbd5e0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  text-align: center;
+  padding: 15px;
+  background: rgba(251, 191, 36, 0.1);
+  border-radius: 8px;
+}
+
+.challenge-instruction strong {
+  color: #fbbf24;
+  font-weight: 700;
+}
+
+/* Update control buttons to support 2 side-by-side buttons */
+.control-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+/* Return home button should be full width below */
+.btn-return-home {
+  width: 100%;
+  padding: 12px 20px;
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  border-radius: 8px;
+  background: rgba(255, 215, 0, 0.2);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-return-home:hover:not(:disabled) {
+  background: rgba(255, 215, 0, 0.3);
+  border-color: #ffd700;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+}
+
+.btn-return-home:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Helper text styling */
+.helper-text {
+  font-size: 0.9rem;
+  color: #a0aec0;
+  font-style: italic;
+}
+
+/* Enhanced status display */
+.status-complete {
+  padding: 15px;
+  background: rgba(16, 185, 129, 0.2);
+  border: 2px solid rgba(16, 185, 129, 0.5);
+  border-radius: 10px;
+  color: #6ee7b7;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-align: center;
+  animation: pulseSuccess 2s ease-in-out infinite;
+}
+
+@keyframes pulseSuccess {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px 10px rgba(16, 185, 129, 0);
+  }
+}
+
+.status-incomplete {
+  padding: 12px;
+  background: rgba(251, 191, 36, 0.2);
+  border: 2px solid rgba(251, 191, 36, 0.5);
+  border-radius: 8px;
+  color: #fcd34d;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+/* Challenge box update */
+.challenge-box {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 25px;
+  border: 2px solid rgba(102, 126, 234, 0.3);
+  text-align: center;
+}
+
+.challenge-box h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.3rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.challenge-box p {
+  margin: 0;
+  color: #cbd5e0;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+/* Distance reference table header */
+.distance-reference h4 {
+  margin-bottom: 10px;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .control-buttons {
+    grid-template-columns: 1fr;
+  }
+  
+  .status-complete,
+  .status-incomplete {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+}
+
+/* Add these additional styles to your tsp.css file */
+
+/* Player Performance Analysis */
+.player-performance-analysis {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 15px;
+  padding: 25px;
+  margin-bottom: 25px;
+  border: 1px solid rgba(100, 150, 255, 0.2);
+}
+
+.player-performance-analysis h3 {
+  margin: 0 0 20px 0;
+  text-align: center;
+  color: #fff;
+  font-size: 1.3rem;
+}
+
+.performance-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.performance-card {
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  border: 2px solid rgba(100, 150, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.performance-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+}
+
+.performance-card.optimal {
+  border-color: rgba(16, 185, 129, 0.5);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.performance-label {
+  font-size: 0.85rem;
+  color: #a0aec0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.performance-value {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.performance-value.actual {
+  color: #fbbf24;
+}
+
+.performance-value.guess {
+  color: #60a5fa;
+}
+
+.performance-value.optimal {
+  color: #10b981;
+}
+
+.performance-detail {
+  font-size: 0.85rem;
+  color: #718096;
+  line-height: 1.4;
+  min-height: 40px;
+}
+
+.performance-insight {
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.insight-success {
+  background: rgba(16, 185, 129, 0.2);
+  border: 2px solid rgba(16, 185, 129, 0.4);
+  color: #6ee7b7;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.insight-info {
+  background: rgba(59, 130, 246, 0.2);
+  border: 2px solid rgba(59, 130, 246, 0.4);
+  color: #93c5fd;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.insight-success strong,
+.insight-info strong {
+  color: #fff;
+}
+
+/* Shortest Distance Challenge Section */
+.shortest-distance-challenge {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+  border: 2px solid rgba(251, 191, 36, 0.3);
+}
+
+.shortest-distance-challenge h3 {
+  margin: 0 0 15px 0;
+  color: #fbbf24;
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+.challenge-instruction {
+  color: #cbd5e0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  text-align: center;
+  padding: 15px;
+  background: rgba(251, 191, 36, 0.1);
+  border-radius: 8px;
+}
+
+.challenge-instruction strong {
+  color: #fbbf24;
+  font-weight: 700;
+}
+
+/* Update control buttons to support 2 side-by-side buttons */
+.control-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+/* Return home button should be full width below */
+.btn-return-home {
+  width: 100%;
+  padding: 12px 20px;
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  border-radius: 8px;
+  background: rgba(255, 215, 0, 0.2);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-return-home:hover:not(:disabled) {
+  background: rgba(255, 215, 0, 0.3);
+  border-color: #ffd700;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+}
+
+.btn-return-home:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Helper text styling */
+.helper-text {
+  font-size: 0.9rem;
+  color: #a0aec0;
+  font-style: italic;
+}
+
+/* Enhanced status display */
+.status-complete {
+  padding: 15px;
+  background: rgba(16, 185, 129, 0.2);
+  border: 2px solid rgba(16, 185, 129, 0.5);
+  border-radius: 10px;
+  color: #6ee7b7;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-align: center;
+  animation: pulseSuccess 2s ease-in-out infinite;
+}
+
+@keyframes pulseSuccess {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px 10px rgba(16, 185, 129, 0);
+  }
+}
+
+.status-incomplete {
+  padding: 12px;
+  background: rgba(251, 191, 36, 0.2);
+  border: 2px solid rgba(251, 191, 36, 0.5);
+  border-radius: 8px;
+  color: #fcd34d;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+/* Challenge box update */
+.challenge-box {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 25px;
+  border: 2px solid rgba(102, 126, 234, 0.3);
+  text-align: center;
+}
+
+.challenge-box h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.3rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.challenge-box p {
+  margin: 0;
+  color: #cbd5e0;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+/* Distance reference table header */
+.distance-reference h4 {
+  margin-bottom: 10px;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .performance-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .control-buttons {
+    grid-template-columns: 1fr;
+  }
+  
+  .status-complete,
+  .status-incomplete {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+  
+  .performance-value {
+    font-size: 1.5rem;
+  }
+  
+  .performance-card {
+    padding: 15px;
   }
 }
