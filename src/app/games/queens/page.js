@@ -24,7 +24,8 @@ class EightQueensGame extends Component {
       result: null,
       gameStartTime: null,
       sessionId: null,
-      solvingProgress: 0
+      solvingProgress: 0,
+      sessionId: null,  
     };
   }
 
@@ -153,66 +154,77 @@ class EightQueensGame extends Component {
 
   startGame = async () => {
     this.setState({ 
-      isLoading: true, 
-      error: '',
-      gameState: 'computing',
-      gameStartTime: new Date().toISOString()
+       isLoading: true, 
+    error: '',
+    gameState: 'computing',
+    gameStartTime: new Date().toISOString()
     });
 
     try {
-      // Save player
-      await fetch('/api/queens/save-player', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          playerName: this.state.playerName.trim()
-        })
-      });
+    // Save player
+    const playerResponse = await fetch('/api/queens/save-player', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        playerName: this.state.playerName.trim()
+      })
+    });
+    
+    const playerData = await playerResponse.json();
+    console.log('Player saved:', playerData);
 
-      // Compute solutions with both methods
-      console.log('Computing sequential solutions...');
-      const seqResult = this.solveSequential();
-      
-      this.setState({ 
+    // Compute solutions with both methods
+    console.log('Computing sequential solutions...');
+    const seqResult = this.solveSequential();
+    
+    this.setState({ 
+      sequentialTime: seqResult.time,
+      sequentialComplete: true,
+      solvingProgress: 50
+    });
+
+    console.log('Computing threaded solutions...');
+    const threadResult = await this.solveThreaded();
+    
+    this.setState({
+      threadedTime: threadResult.time,
+      threadedComplete: true,
+      allSolutions: seqResult.solutions,
+      totalSolutions: seqResult.count,
+      solvingProgress: 100,
+      isLoading: false,
+      gameState: 'playing'
+    });
+
+    // Save computation results to database and get sessionId
+    const computationResponse = await fetch('/api/queens/save-computation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        playerName: this.state.playerName,
         sequentialTime: seqResult.time,
-        sequentialComplete: true,
-        solvingProgress: 50
-      });
-
-      console.log('Computing threaded solutions...');
-      const threadResult = await this.solveThreaded();
-      
-      this.setState({
         threadedTime: threadResult.time,
-        threadedComplete: true,
-        allSolutions: seqResult.solutions,
-        totalSolutions: seqResult.count,
-        solvingProgress: 100,
-        isLoading: false,
-        gameState: 'playing'
-      });
+        solutionsCount: seqResult.count
+      })
+    });
 
-      // Save computation results to database
-      await fetch('/api/queens/save-computation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          playerName: this.state.playerName,
-          sequentialTime: seqResult.time,
-          threadedTime: threadResult.time,
-          solutionsCount: seqResult.count
-        })
-      });
-
-    } catch (err) {
-      console.error('Error computing solutions:', err);
-      this.setState({ 
-        error: 'Failed to compute solutions: ' + err.message,
-        isLoading: false,
-        gameState: 'welcome'
-      });
+    const computationData = await computationResponse.json();
+    console.log('Computation saved:', computationData);
+    
+    // IMPORTANT: Store sessionId for later use
+    if (computationData.success) {
+      this.setState({ sessionId: computationData.sessionId });
     }
-  };
+
+  } catch (err) {
+    console.error('Error computing solutions:', err);
+    this.setState({ 
+      error: 'Failed to compute solutions: ' + err.message,
+      isLoading: false,
+      gameState: 'welcome'
+    });
+  }
+};
 
   handleSquareClick = (row, col) => {
     const { playerSolution } = this.state;
@@ -267,7 +279,7 @@ class EightQueensGame extends Component {
   };
 
   submitSolution = async () => {
-    const { playerSolution, allSolutions, foundSolutions, playerName, totalSolutions } = this.state;
+    const { playerSolution, allSolutions, foundSolutions, playerName, totalSolutions , sessionId } = this.state;
     
     if (playerSolution.length !== 8) {
       this.setState({ error: 'Please place exactly 8 queens on the board' });
@@ -314,10 +326,10 @@ class EightQueensGame extends Component {
     }
 
     // Valid new solution!
-    const newFoundSolutions = new Set(foundSolutions);
-    newFoundSolutions.add(matchingSolution);
+   const newFoundSolutions = new Set(foundSolutions);
+  newFoundSolutions.add(matchingSolution);
     
-    const allFound = newFoundSolutions.size === totalSolutions;
+     const allFound = newFoundSolutions.size === totalSolutions;
     
     this.setState({
       foundSolutions: newFoundSolutions,
@@ -325,36 +337,44 @@ class EightQueensGame extends Component {
       error: ''
     });
 
-    // Save to database
-    try {
-      await fetch('/api/queens/save-solution', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          playerName: playerName,
-          solution: JSON.stringify(playerBoard),
-          solutionNumber: matchingSolution + 1,
-          isComplete: allFound
-        })
-      });
+  // Save to database with sessionId
+  try {
+    const response = await fetch('/api/queens/save-solution', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        playerName: playerName,
+        solution: JSON.stringify(playerBoard),
+        solutionNumber: matchingSolution + 1,
+        isComplete: allFound,
+        sessionId: sessionId  // PASS SESSION ID
+      })
+    });
 
-      // If all solutions found, clear the flag
-      if (allFound) {
-        await fetch('/api/queens/clear-flags', {
-          method: 'POST'
+    const result = await response.json();
+    console.log('Solution saved:', result);
+
+    // If all solutions found, clear the flag
+    if (allFound) {
+      await fetch('/api/queens/clear-flags', {
+        method: 'POST'
+      });
+      
+      setTimeout(() => {
+        this.setState({
+          foundSolutions: new Set(),
+          error: '🎉 Congratulations! You found all 92 solutions! Game complete!'
         });
-        
-        setTimeout(() => {
-          this.setState({
-            foundSolutions: new Set(),
-            error: 'All solutions found! Flags cleared. Game reset for next players.'
-          });
-        }, 3000);
-      }
-    } catch (err) {
-      console.error('Error saving solution:', err);
+      }, 3000);
     }
-  };
+  } catch (err) {
+    console.error('Error saving solution:', err);
+    // Don't block the game if save fails
+    this.setState({ 
+      error: 'Solution accepted but failed to save to database' 
+    });
+  }
+};
 
   checkConflicts = (queens) => {
     const conflicts = [];
