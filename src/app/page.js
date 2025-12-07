@@ -24,8 +24,8 @@ const GameCenterDashboard = () => {
       color: 'from-green-500 to-emerald-500',
       complexity: 'Network Flow',
       algorithms: ['Ford-Fulkerson', 'Edmonds-Karp'],
-      route: '/games/traffic',
-      implemented: false
+      route: '/games/tsg',
+      implemented: true
     },
     {
       id: 'tsp',
@@ -47,7 +47,7 @@ const GameCenterDashboard = () => {
       complexity: 'Recursive',
       algorithms: ['Classic Recursion', 'Frame-Stewart'],
       route: '/games/hanoi',
-      implemented: false
+      implemented: true
     },
     {
       id: 'queens',
