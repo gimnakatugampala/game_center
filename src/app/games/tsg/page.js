@@ -4,7 +4,6 @@
 import React, { Component } from 'react';
 import dynamic from 'next/dynamic';
 import { generateRandomCapacities } from '../../lib/maxFlowAlgorithms';
-import './tsg.css';
 
 // Dynamically import NetworkGraph to avoid SSR issues
 const Network = dynamic(() => import('../../components/tsg/NetworkGraph'), {
@@ -29,15 +28,10 @@ class TSGGame extends Component {
     };
   }
 
-  componentDidMount() {
-    // Don't initialize game yet - wait for player name
-  }
-
   generateRandomCapacities = () => {
     return generateRandomCapacities();
   };
 
-  // Save player name and initialize game
   handlePlayerNameSubmit = async () => {
     const { playerName } = this.state;
     
@@ -52,7 +46,6 @@ class TSGGame extends Component {
     }
 
     try {
-      // Save player entry to database
       await fetch('/api/tsg/save-player', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -62,11 +55,9 @@ class TSGGame extends Component {
         })
       });
 
-      // Initialize game after player name is saved
       this.initializeGame();
     } catch (err) {
       console.error('Error saving player:', err);
-      // Still allow game to continue even if save fails
       this.initializeGame();
     }
   };
@@ -116,7 +107,6 @@ class TSGGame extends Component {
 
       const data = await response.json();
       
-      // Validate response data
       if (!data || typeof data.maxFlow !== 'number') {
         throw new Error('Invalid response from server');
       }
@@ -132,9 +122,6 @@ class TSGGame extends Component {
 
   saveToDatabaseCall = async (playerName, playerAnswer, correctAnswer, isCorrect, algorithmResults, capacities) => {
     try {
-      console.log('💾 Saving game data to database...');
-      
-      // Prepare the data payload
       const gameData = {
         playerName: playerName.trim(),
         playerAnswer: playerAnswer,
@@ -147,7 +134,6 @@ class TSGGame extends Component {
         endTime: new Date().toISOString()
       };
 
-      // Call the unified save-game API endpoint
       const response = await fetch('/api/tsg/save-game', {
         method: 'POST',
         headers: {
@@ -162,27 +148,12 @@ class TSGGame extends Component {
         throw new Error(result.error || 'Failed to save game data');
       }
 
-      console.log('✅ Game data saved successfully:', result);
-      
-      // Store session ID for potential future use
       this.setState({ sessionId: result.sessionId });
-      
       return result;
-
     } catch (error) {
-      console.error('❌ Error saving game data:', error);
-      
-      // Show user-friendly error but don't stop the game
-      this.setState({ 
-        error: 'Warning: Failed to save to database. Game continues...' 
-      });
-      
-      // Clear error after 3 seconds
-      setTimeout(() => {
-        this.setState({ error: '' });
-      }, 3000);
-      
-      // Don't throw - allow game to continue even if save fails
+      console.error('Error saving game data:', error);
+      this.setState({ error: 'Warning: Failed to save to database. Game continues...' });
+      setTimeout(() => this.setState({ error: '' }), 3000);
       return null;
     }
   };
@@ -221,7 +192,6 @@ class TSGGame extends Component {
 
       const isCorrect = answerValue === maxFlowResult.maxFlow;
 
-      // Prepare algorithm results
       const algorithmResults = [
         {
           algorithm: 'Ford-Fulkerson (DFS-based)',
@@ -261,7 +231,6 @@ class TSGGame extends Component {
         gameState: 'result',
         isLoading: false
       });
-
     } catch (err) {
       this.setState({ error: 'Error: ' + err.message, isLoading: false });
     }
@@ -285,13 +254,6 @@ class TSGGame extends Component {
     this.initializeGame();
   };
 
-  handleNameChange = (e) => {
-    this.setState({ 
-      playerName: e.target.value,
-      error: '' 
-    });
-  };
-
   render() {
     const {
       gameState,
@@ -306,62 +268,75 @@ class TSGGame extends Component {
     } = this.state;
 
     return (
-      <div className="tsg-game-container">
-        <div className="tsg-header">
-          <h1 className="tsg-title">🚦 Traffic Simulation Game</h1>
-          <p className="tsg-subtitle">Find the maximum flow from source to sink</p>
+      <div className="min-h-screen bg-gradient-to-br from-[#0f0f1e] via-[#1a1a2e] to-[#16213e] p-5 font-sans text-white">
+        
+        {/* Header */}
+        <div className="text-center mb-8 animate-fadeInDown">
+          <h1 className="text-5xl font-extrabold bg-gradient-to-r from-indigo-400 to-purple-600 bg-clip-text text-transparent mb-2 drop-shadow-[0_0_30px_rgba(102,126,234,0.5)]">
+            🚦 Traffic Simulation Game
+          </h1>
+          <p className="text-lg text-slate-400 mt-3">
+            Find the maximum flow from source to sink
+          </p>
         </div>
 
-        {/* Welcome Screen - Player Name Entry */}
+        {/* Welcome Screen */}
         {gameState === 'welcome' && (
-          <div className="welcome-screen">
-            <div className="welcome-card">
-              <div className="welcome-icon">👋</div>
-              <h2>Welcome to TSG Game!</h2>
-              <p className="welcome-description">
+          <div className="flex justify-center items-center min-h-[70vh] px-5 py-10">
+            <div className="bg-slate-800/90 backdrop-blur-xl rounded-[30px] p-12 max-w-2xl w-full shadow-[0_30px_80px_rgba(0,0,0,0.6)] border-2 border-indigo-500/30 text-center animate-fadeInUp">
+              
+              <div className="text-8xl mb-5 animate-wave">👋</div>
+
+              <h2 className="text-4xl font-bold mb-5 bg-gradient-to-r from-indigo-400 to-purple-600 bg-clip-text text-transparent">
+                Welcome to TSG Game!
+              </h2>
+
+              <p className="text-lg text-slate-300 leading-relaxed mb-10">
                 Challenge yourself to find the maximum flow in a traffic network. 
                 Test your problem-solving skills against two powerful algorithms!
               </p>
               
-              <div className="player-name-section">
-                <label htmlFor="playerNameInput">Enter Your Name</label>
+              <div className="my-8">
+                <label htmlFor="playerNameInput" className="block text-xl font-semibold text-slate-200 mb-4">
+                  Enter Your Name
+                </label>
                 <input
                   id="playerNameInput"
                   type="text"
                   value={playerName}
-                  onChange={this.handleNameChange}
+                  onChange={(e) => this.setState({ playerName: e.target.value, error: '' })}
                   placeholder="Your name..."
-                  className="welcome-input"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      this.handlePlayerNameSubmit();
-                    }
-                  }}
+                  className="w-full px-6 py-4 border-3 border-indigo-500/40 rounded-2xl bg-black/50 text-white text-xl text-center transition-all duration-300 focus:outline-none focus:border-indigo-500 focus:shadow-[0_0_30px_rgba(102,126,234,0.5)] focus:bg-black/70 focus:scale-[1.02] placeholder:text-slate-500"
+                  onKeyPress={(e) => e.key === 'Enter' && this.handlePlayerNameSubmit()}
                   autoFocus
                 />
               </div>
 
-              {error && <div className="error-alert">{error}</div>}
+              {error && (
+                <div className="bg-red-500/20 border-2 border-red-500/50 rounded-xl px-4 py-3 my-4 text-red-300 font-semibold animate-shake">
+                  {error}
+                </div>
+              )}
 
               <button 
                 onClick={this.handlePlayerNameSubmit}
-                className="btn-start"
+                className="w-full px-8 py-4 border-none rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xl font-bold cursor-pointer transition-all duration-300 shadow-[0_15px_40px_rgba(102,126,234,0.5)] hover:translate-y-[-3px] hover:shadow-[0_20px_50px_rgba(102,126,234,0.7)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none mt-6"
                 disabled={!playerName.trim()}
               >
                 Start Game →
               </button>
 
-              <div className="game-features">
-                <div className="feature-item">
-                  <span className="feature-icon">🎯</span>
+              <div className="flex justify-around mt-10 pt-8 border-t-2 border-white/10">
+                <div className="flex flex-col items-center gap-2.5 text-slate-300 text-sm font-semibold">
+                  <span className="text-2xl">🎯</span>
                   <span>Network Visualization</span>
                 </div>
-                <div className="feature-item">
-                  <span className="feature-icon">⚡</span>
+                <div className="flex flex-col items-center gap-2.5 text-slate-300 text-sm font-semibold">
+                  <span className="text-2xl">⚡</span>
                   <span>2 Algorithms</span>
                 </div>
-                <div className="feature-item">
-                  <span className="feature-icon">📊</span>
+                <div className="flex flex-col items-center gap-2.5 text-slate-300 text-sm font-semibold">
+                  <span className="text-2xl">📊</span>
                   <span>Performance Analysis</span>
                 </div>
               </div>
@@ -371,97 +346,115 @@ class TSGGame extends Component {
 
         {/* Game Content */}
         {gameState !== 'welcome' && (
-          <div className="tsg-content">
+          <div className="max-w-[1400px] mx-auto">
+            
             {/* Player Info Bar */}
-            <div className="player-info-bar">
-              <span className="player-greeting">
-                👤 Playing as: <strong>{playerName}</strong> | Round: <strong>{roundNumber}</strong>
+            <div className="bg-slate-800/80 backdrop-blur-md px-8 py-4 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.3)] border border-indigo-500/20 mb-5">
+              <span className="text-lg text-slate-300">
+                👤 Playing as: <strong className="text-white bg-gradient-to-r from-indigo-400 to-purple-600 bg-clip-text text-transparent text-xl font-extrabold">
+                  {playerName}
+                </strong> | Round: <strong className="text-white bg-gradient-to-r from-indigo-400 to-purple-600 bg-clip-text text-transparent text-xl font-extrabold">
+                  {roundNumber}
+                </strong>
               </span>
             </div>
 
-            <div className="tsg-content-grid">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_450px] gap-8">
+              
               {/* Network Graph Section */}
-              <div className="graph-section">
-                <div className="graph-container">
-                  <h2>Traffic Network</h2>
-                  {capacities && (
-                    <div className="network-wrapper">
-                      <Network capacities={capacities} />
-                    </div>
-                  )}
-                  
-                  <div className="capacities-list">
-                    <h3>Road Capacities (vehicles/minute):</h3>
-                    <div className="capacities-grid">
-                      {capacities && Object.entries(capacities).map(([edge, capacity]) => (
-                        <div key={edge} className="capacity-item">
-                          <span className="capacity-edge">{edge}</span>
-                          <span className="capacity-value">{capacity}</span>
-                        </div>
-                      ))}
-                    </div>
+              <div className="bg-slate-900/60 backdrop-blur-md rounded-3xl p-5 shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-white/10">
+                <h2 className="text-2xl font-bold text-white mb-5 text-center">Traffic Network</h2>
+                {capacities && (
+                  <div className="w-full">
+                    <Network capacities={capacities} />
+                  </div>
+                )}
+                
+                <div className="mt-5">
+                  <h3 className="text-lg font-bold text-slate-300 mb-3">Road Capacities (vehicles/minute):</h3>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {capacities && Object.entries(capacities).map(([edge, capacity]) => (
+                      <div key={edge} className="bg-black/40 rounded-lg p-3 flex justify-between items-center border border-blue-500/20">
+                        <span className="text-slate-300 font-semibold text-sm">{edge}</span>
+                        <span className="text-white font-bold text-lg bg-gradient-to-r from-indigo-400 to-purple-600 bg-clip-text text-transparent">{capacity}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
 
               {/* Game Controls */}
-              <div className="controls-section">
+              <div className="flex flex-col">
+                
                 {/* Playing Phase */}
                 {gameState === 'playing' && (
-                  <div className="game-panel">
-                    <div className="panel-header">
-                      <h2>Your Challenge</h2>
+                  <div className="bg-slate-800/80 backdrop-blur-md rounded-3xl p-8 shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-white/10 animate-slideInRight">
+                    
+                    <div className="text-center mb-6 pb-5 border-b-2 border-white/10">
+                      <h2 className="text-3xl font-bold m-0 bg-gradient-to-r from-indigo-400 to-purple-600 bg-clip-text text-transparent">
+                        Your Challenge
+                      </h2>
                     </div>
 
-                    <div className="challenge-box">
-                      <h3>🎯 Find the Maximum Flow!</h3>
-                      <p>Calculate the maximum flow from source (A) to sink (T) in the traffic network.</p>
+                    <div className="bg-gradient-to-br from-indigo-500/20 to-purple-600/20 rounded-xl p-5 mb-6 border-2 border-indigo-500/30 text-center">
+                      <h3 className="m-0 mb-2.5 text-xl bg-gradient-to-r from-indigo-400 to-purple-600 bg-clip-text text-transparent">
+                        🎯 Find the Maximum Flow!
+                      </h3>
+                      <p className="m-0 text-slate-300 leading-relaxed text-sm">
+                        Calculate the maximum flow from source (A) to sink (T) in the traffic network.
+                      </p>
                     </div>
 
-                    <div className="control-section">
-                      <h3>Calculate Maximum Flow</h3>
+                    <div className="mb-6">
+                      <h3 className="mb-3 text-white text-lg font-bold">Calculate Maximum Flow</h3>
                       <button
                         onClick={this.calculateMaxFlow}
                         disabled={isLoading || !capacities}
-                        className="btn-primary"
+                        className="w-full px-6 py-3.5 border-none rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-lg font-bold cursor-pointer transition-all duration-300 shadow-[0_10px_30px_rgba(102,126,234,0.4)] hover:translate-y-[-2px] hover:shadow-[0_15px_40px_rgba(102,126,234,0.6)] disabled:opacity-60 disabled:cursor-not-allowed"
                       >
                         {isLoading ? '⏳ Calculating...' : 'Calculate Max Flow'}
                       </button>
 
                       {maxFlowResult && (
-                        <div className="result-box">
-                          <h4>Algorithm Results:</h4>
-                          <div className="algorithm-result">
-                            <strong>{maxFlowResult.algorithm1.name}:</strong>
-                            <div>Max Flow: {maxFlowResult.algorithm1.maxFlow}</div>
-                            <div>Time: {maxFlowResult.algorithm1.executionTime.toFixed(3)} ms</div>
+                        <div className="mt-5 bg-black/30 rounded-xl p-5 border border-blue-500/20">
+                          <h4 className="text-white font-bold mb-3">Algorithm Results:</h4>
+                          <div className="bg-black/40 rounded-lg p-4 mb-2.5 border-l-4 border-indigo-500">
+                            <strong className="block text-white mb-2">{maxFlowResult.algorithm1.name}:</strong>
+                            <div className="text-slate-300 text-sm">Max Flow: {maxFlowResult.algorithm1.maxFlow}</div>
+                            <div className="text-slate-300 text-sm">Time: {maxFlowResult.algorithm1.executionTime.toFixed(3)} ms</div>
                           </div>
-                          <div className="algorithm-result">
-                            <strong>{maxFlowResult.algorithm2.name}:</strong>
-                            <div>Max Flow: {maxFlowResult.algorithm2.maxFlow}</div>
-                            <div>Time: {maxFlowResult.algorithm2.executionTime.toFixed(3)} ms</div>
+                          <div className="bg-black/40 rounded-lg p-4 border-l-4 border-purple-500">
+                            <strong className="block text-white mb-2">{maxFlowResult.algorithm2.name}:</strong>
+                            <div className="text-slate-300 text-sm">Max Flow: {maxFlowResult.algorithm2.maxFlow}</div>
+                            <div className="text-slate-300 text-sm">Time: {maxFlowResult.algorithm2.executionTime.toFixed(3)} ms</div>
                           </div>
                         </div>
                       )}
                     </div>
 
-                    <div className="input-group">
-                      <label>Maximum Flow from A to T:</label>
+                    <div className="mb-5">
+                      <label className="block mb-2 font-semibold text-slate-300 text-sm">
+                        Maximum Flow from A to T:
+                      </label>
                       <input
                         type="number"
                         value={playerAnswer}
                         onChange={(e) => this.setState({ playerAnswer: e.target.value, error: '' })}
                         placeholder="Enter your answer"
-                        className="input-field"
+                        className="w-full px-4 py-3 border-2 border-blue-500/30 rounded-xl bg-black/40 text-white text-base transition-all duration-300 focus:outline-none focus:border-indigo-500 focus:shadow-[0_0_20px_rgba(102,126,234,0.3)] focus:bg-black/60 placeholder:text-slate-500"
                         min="0"
                       />
                     </div>
 
-                    {error && <div className="error-alert">{error}</div>}
+                    {error && (
+                      <div className="bg-red-500/20 border-2 border-red-500/50 rounded-xl px-4 py-3 my-4 text-red-300 font-semibold animate-shake">
+                        {error}
+                      </div>
+                    )}
 
                     <button 
                       onClick={this.submitAnswer} 
-                      className="btn-primary btn-large"
+                      className="w-full px-6 py-4 border-none rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xl font-bold cursor-pointer transition-all duration-300 shadow-[0_10px_30px_rgba(102,126,234,0.4)] hover:translate-y-[-2px] hover:shadow-[0_15px_40px_rgba(102,126,234,0.6)] disabled:opacity-60 disabled:cursor-not-allowed"
                       disabled={isLoading || !maxFlowResult || !playerAnswer}
                     >
                       {isLoading ? '⏳ Submitting...' : 'Submit Answer'}
@@ -471,49 +464,68 @@ class TSGGame extends Component {
 
                 {/* Result Phase */}
                 {gameState === 'result' && (
-                  <div className="game-panel">
-                    <div className={`result-header ${gameResult.isCorrect ? 'win' : 'lose'}`}>
-                      <h2>
+                  <div className="bg-slate-800/80 backdrop-blur-md rounded-3xl p-8 shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-white/10 animate-slideInRight">
+                    
+                    <div className={`text-center rounded-2xl p-8 mb-6 ${
+                      gameResult.isCorrect 
+                        ? 'bg-gradient-to-r from-emerald-500/20 to-green-500/20 border-2 border-emerald-500/50' 
+                        : 'bg-gradient-to-r from-red-500/20 to-rose-500/20 border-2 border-red-500/50'
+                    }`}>
+                      <h2 className="text-4xl font-bold mb-3">
                         {gameResult.isCorrect ? '🎉 Correct!' : '❌ Incorrect'}
                       </h2>
-                      <p>
+                      <p className="text-slate-300 text-lg">
                         {gameResult.isCorrect 
                           ? 'Great job! You found the maximum flow!' 
                           : 'Not quite. Check the optimal solution below.'}
                       </p>
                     </div>
 
-                    <div className="result-details">
-                      <div className="result-stat">
-                        <div className="stat-label">Your Answer</div>
-                        <div className="stat-value">{gameResult.playerAnswer}</div>
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                      <div className="bg-black/30 rounded-xl p-5 text-center border border-blue-500/20">
+                        <div className="text-xs uppercase tracking-wider text-slate-400 mb-2 font-semibold">Your Answer</div>
+                        <div className="text-3xl font-extrabold bg-gradient-to-r from-indigo-400 to-purple-600 bg-clip-text text-transparent">
+                          {gameResult.playerAnswer}
+                        </div>
                       </div>
-                      <div className="result-stat">
-                        <div className="stat-label">Correct Answer</div>
-                        <div className="stat-value">{gameResult.correctAnswer}</div>
+                      <div className="bg-black/30 rounded-xl p-5 text-center border border-green-500/20">
+                        <div className="text-xs uppercase tracking-wider text-slate-400 mb-2 font-semibold">Correct Answer</div>
+                        <div className="text-3xl font-extrabold bg-gradient-to-r from-green-400 to-emerald-600 bg-clip-text text-transparent">
+                          {gameResult.correctAnswer}
+                        </div>
                       </div>
                     </div>
 
                     {maxFlowResult && (
-                      <div className="algorithm-comparison">
-                        <h4>📊 Algorithm Performance</h4>
-                        <div className="algorithm-stats">
-                          <div className="algorithm-stat-card">
-                            <div className="algorithm-name">{maxFlowResult.algorithm1.name}</div>
-                            <div className="algorithm-time">{maxFlowResult.algorithm1.executionTime.toFixed(3)} ms</div>
+                      <div className="bg-black/30 rounded-xl p-5 mb-6 border border-blue-500/20">
+                        <h4 className="text-white font-bold text-center mb-4">📊 Algorithm Performance</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="bg-black/40 rounded-xl p-4 text-center border border-indigo-500/30">
+                            <div className="text-slate-300 text-sm mb-2">{maxFlowResult.algorithm1.name}</div>
+                            <div className="text-xl font-bold text-indigo-400">
+                              {maxFlowResult.algorithm1.executionTime.toFixed(3)} ms
+                            </div>
                           </div>
-                          <div className="algorithm-stat-card">
-                            <div className="algorithm-name">{maxFlowResult.algorithm2.name}</div>
-                            <div className="algorithm-time">{maxFlowResult.algorithm2.executionTime.toFixed(3)} ms</div>
+                          <div className="bg-black/40 rounded-xl p-4 text-center border border-purple-500/30">
+                            <div className="text-slate-300 text-sm mb-2">{maxFlowResult.algorithm2.name}</div>
+                            <div className="text-xl font-bold text-purple-400">
+                              {maxFlowResult.algorithm2.executionTime.toFixed(3)} ms
+                            </div>
                           </div>
                         </div>
                       </div>
                     )}
 
-                    <button onClick={this.startNewRound} className="btn-primary btn-large">
+                    <button 
+                      onClick={this.startNewRound} 
+                      className="w-full px-6 py-4 border-none rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xl font-bold cursor-pointer transition-all duration-300 shadow-[0_10px_30px_rgba(102,126,234,0.4)] hover:translate-y-[-2px] hover:shadow-[0_15px_40px_rgba(102,126,234,0.6)] mb-2.5"
+                    >
                       🔄 Next Round
                     </button>
-                    <button onClick={this.resetGame} className="btn-secondary">
+                    <button 
+                      onClick={this.resetGame}
+                      className="w-full px-6 py-4 border-2 border-blue-500/50 rounded-xl bg-blue-500/20 text-white text-xl font-bold cursor-pointer transition-all duration-300 hover:bg-blue-500/30 hover:border-blue-500"
+                    >
                       🏠 New Game
                     </button>
                   </div>
