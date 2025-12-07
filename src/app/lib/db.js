@@ -1,5 +1,5 @@
 // src/lib/db.js
-import mysql from 'mysql2/promise';
+import mysql from "mysql2/promise";
 
 // Create connection pool
 const pool = mysql.createPool({
@@ -10,7 +10,7 @@ const pool = mysql.createPool({
   // port: process.env.port || '3306',
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
 });
 
 // Execute query function
@@ -19,7 +19,7 @@ async function execute(query, params = []) {
     const [results] = await pool.execute(query, params);
     return results;
   } catch (error) {
-    console.error('Database query error:', error);
+    console.error("Database query error:", error);
     throw error;
   }
 }
@@ -30,7 +30,7 @@ async function query(sql, params = []) {
     const [rows] = await pool.query(sql, params);
     return rows;
   } catch (error) {
-    console.error('Database query error:', error);
+    console.error("Database query error:", error);
     throw error;
   }
 }
@@ -39,11 +39,11 @@ async function query(sql, params = []) {
 async function testConnection() {
   try {
     const connection = await pool.getConnection();
-    console.log('✅ Database connected successfully');
+    console.log("✅ Database connected successfully");
     connection.release();
     return true;
   } catch (error) {
-    console.error('❌ Database connection failed:', error.message);
+    console.error("❌ Database connection failed:", error.message);
     return false;
   }
 }
@@ -52,7 +52,7 @@ const db = {
   execute,
   query,
   pool,
-  testConnection
+  testConnection,
 };
 
 export default db;
