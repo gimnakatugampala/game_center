@@ -108,7 +108,7 @@ export async function POST(request) {
 
     // Create game session
     const [sessionResult] = await connection.execute(
-      `INSERT INTO game_sessions 
+      `INSERT INTO tsg_game_sessions 
        (player_id, game_id, started_at, completed_at, session_duration_seconds, is_completed, is_successful)
        VALUES (?, ?, ?, ?, ?, TRUE, ?)`,
       [playerId, gameId, started, completed, durationSeconds, isCorrect]

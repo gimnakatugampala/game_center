@@ -76,7 +76,7 @@ export async function POST(request) {
 
     // Step 3: Create game session
     const [sessionResult] = await connection.execute(
-      `INSERT INTO game_sessions 
+      `INSERT INTO tsg_game_sessions 
        (player_id, game_id, started_at, completed_at, session_duration_seconds, is_completed, is_successful)
        VALUES (?, ?, ?, ?, ?, TRUE, ?)`,
       [playerId, gameId, started, completed, durationSeconds, isCorrect]
@@ -117,7 +117,7 @@ export async function POST(request) {
     for (const algo of algorithmResults) {
       try {
         await connection.execute(
-          `INSERT INTO algorithm_performance 
+          `INSERT INTO tsg_algorithm_performance 
            (session_id, algorithm_name, execution_time_ms, result_value, algorithm_type)
            VALUES (?, ?, ?, ?, ?)`,
           [

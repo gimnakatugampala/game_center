@@ -162,7 +162,7 @@ class TSGGame extends Component {
     try {
       this.setState({ isLoading: true, error: '' });
 
-      const { playerName, playerAnswer, maxFlowResult, capacities } = this.state;
+      const { playerName, playerAnswer, capacities } = this.state;
 
       if (!playerName || !playerName.trim()) {
         this.setState({ error: 'Please enter your name', isLoading: false });
@@ -185,9 +185,24 @@ class TSGGame extends Component {
         return;
       }
 
-      if (!maxFlowResult) {
-        this.setState({ error: 'Please calculate the maximum flow first', isLoading: false });
-        return;
+      // Calculate max flow using both algorithms
+      const response = await fetch('/api/tsg/calculate-flow', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ capacities }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+
+      const maxFlowResult = await response.json();
+      
+      if (!maxFlowResult || typeof maxFlowResult.maxFlow !== 'number') {
+        throw new Error('Invalid response from server');
       }
 
       const isCorrect = answerValue === maxFlowResult.maxFlow;
@@ -221,6 +236,7 @@ class TSGGame extends Component {
       );
 
       this.setState({
+        maxFlowResult: maxFlowResult,
         gameResult: {
           isCorrect: isCorrect,
           correctAnswer: maxFlowResult.maxFlow,
@@ -405,44 +421,27 @@ class TSGGame extends Component {
                       </p>
                     </div>
 
-                    <div className="mb-6">
-                      <h3 className="mb-3 text-white text-lg font-bold">Calculate Maximum Flow</h3>
-                      <button
-                        onClick={this.calculateMaxFlow}
-                        disabled={isLoading || !capacities}
-                        className="w-full px-6 py-3.5 border-none rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-lg font-bold cursor-pointer transition-all duration-300 shadow-[0_10px_30px_rgba(102,126,234,0.4)] hover:translate-y-[-2px] hover:shadow-[0_15px_40px_rgba(102,126,234,0.6)] disabled:opacity-60 disabled:cursor-not-allowed"
-                      >
-                        {isLoading ? '⏳ Calculating...' : 'Calculate Max Flow'}
-                      </button>
-
-                      {maxFlowResult && (
-                        <div className="mt-5 bg-black/30 rounded-xl p-5 border border-blue-500/20">
-                          <h4 className="text-white font-bold mb-3">Algorithm Results:</h4>
-                          <div className="bg-black/40 rounded-lg p-4 mb-2.5 border-l-4 border-indigo-500">
-                            <strong className="block text-white mb-2">{maxFlowResult.algorithm1.name}:</strong>
-                            <div className="text-slate-300 text-sm">Max Flow: {maxFlowResult.algorithm1.maxFlow}</div>
-                            <div className="text-slate-300 text-sm">Time: {maxFlowResult.algorithm1.executionTime.toFixed(3)} ms</div>
-                          </div>
-                          <div className="bg-black/40 rounded-lg p-4 border-l-4 border-purple-500">
-                            <strong className="block text-white mb-2">{maxFlowResult.algorithm2.name}:</strong>
-                            <div className="text-slate-300 text-sm">Max Flow: {maxFlowResult.algorithm2.maxFlow}</div>
-                            <div className="text-slate-300 text-sm">Time: {maxFlowResult.algorithm2.executionTime.toFixed(3)} ms</div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
                     <div className="mb-5">
                       <label className="block mb-2 font-semibold text-slate-300 text-sm">
                         Maximum Flow from A to T:
                       </label>
                       <input
-                        type="number"
+                        type="text"
                         value={playerAnswer}
-                        onChange={(e) => this.setState({ playerAnswer: e.target.value, error: '' })}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          // Check if value contains any letters
+                          if (/[a-zA-Z]/.test(value)) {
+                            this.setState({ 
+                              playerAnswer: value,
+                              error: 'Please enter only numbers. Letters are not allowed.' 
+                            });
+                          } else {
+                            this.setState({ playerAnswer: value, error: '' });
+                          }
+                        }}
                         placeholder="Enter your answer"
                         className="w-full px-4 py-3 border-2 border-blue-500/30 rounded-xl bg-black/40 text-white text-base transition-all duration-300 focus:outline-none focus:border-indigo-500 focus:shadow-[0_0_20px_rgba(102,126,234,0.3)] focus:bg-black/60 placeholder:text-slate-500"
-                        min="0"
                       />
                     </div>
 
@@ -455,9 +454,9 @@ class TSGGame extends Component {
                     <button 
                       onClick={this.submitAnswer} 
                       className="w-full px-6 py-4 border-none rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xl font-bold cursor-pointer transition-all duration-300 shadow-[0_10px_30px_rgba(102,126,234,0.4)] hover:translate-y-[-2px] hover:shadow-[0_15px_40px_rgba(102,126,234,0.6)] disabled:opacity-60 disabled:cursor-not-allowed"
-                      disabled={isLoading || !maxFlowResult || !playerAnswer}
+                      disabled={isLoading || !playerAnswer}
                     >
-                      {isLoading ? '⏳ Submitting...' : 'Submit Answer'}
+                      {isLoading ? '⏳ Checking Answer...' : 'Submit Answer'}
                     </button>
                   </div>
                 )}
@@ -496,25 +495,25 @@ class TSGGame extends Component {
                       </div>
                     </div>
 
-                    {maxFlowResult && (
-                      <div className="bg-black/30 rounded-xl p-5 mb-6 border border-blue-500/20">
-                        <h4 className="text-white font-bold text-center mb-4">📊 Algorithm Performance</h4>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="bg-black/40 rounded-xl p-4 text-center border border-indigo-500/30">
-                            <div className="text-slate-300 text-sm mb-2">{maxFlowResult.algorithm1.name}</div>
-                            <div className="text-xl font-bold text-indigo-400">
-                              {maxFlowResult.algorithm1.executionTime.toFixed(3)} ms
-                            </div>
+                    <div className="bg-black/30 rounded-xl p-5 mb-6 border border-blue-500/20">
+                      <h4 className="text-white font-bold text-center mb-4">📊 Algorithm Performance</h4>
+                      <div className="space-y-3">
+                        <div className="bg-black/40 rounded-xl p-4 border border-indigo-500/30">
+                          <div className="flex justify-between items-center mb-2">
+                            <strong className="text-white text-sm">{gameResult.algorithm1Time !== undefined ? 'Ford-Fulkerson' : 'Algorithm 1'}</strong>
+                            <span className="text-indigo-400 font-bold text-lg">{gameResult.algorithm1Time ? gameResult.algorithm1Time.toFixed(4) : '0.0000'} ms</span>
                           </div>
-                          <div className="bg-black/40 rounded-xl p-4 text-center border border-purple-500/30">
-                            <div className="text-slate-300 text-sm mb-2">{maxFlowResult.algorithm2.name}</div>
-                            <div className="text-xl font-bold text-purple-400">
-                              {maxFlowResult.algorithm2.executionTime.toFixed(3)} ms
-                            </div>
+                          <div className="text-slate-400 text-xs">Max Flow: {gameResult.correctAnswer}</div>
+                        </div>
+                        <div className="bg-black/40 rounded-xl p-4 border border-purple-500/30">
+                          <div className="flex justify-between items-center mb-2">
+                            <strong className="text-white text-sm">{gameResult.algorithm2Time !== undefined ? 'Edmonds-Karp' : 'Algorithm 2'}</strong>
+                            <span className="text-purple-400 font-bold text-lg">{gameResult.algorithm2Time ? gameResult.algorithm2Time.toFixed(4) : '0.0000'} ms</span>
                           </div>
+                          <div className="text-slate-400 text-xs">Max Flow: {gameResult.correctAnswer}</div>
                         </div>
                       </div>
-                    )}
+                    </div>
 
                     <button 
                       onClick={this.startNewRound} 
