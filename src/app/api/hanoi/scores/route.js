@@ -6,10 +6,20 @@ import db from "../../../lib/db";
 export async function GET() {
   try {
     const rows = await db.query(`
-      SELECT id, user_id, player_name, pegs, disks,
-             user_moves, target_moves, is_optimal, time_taken_ms, created_at
-      FROM scores
-      ORDER BY disks DESC, user_moves ASC, time_taken_ms ASC, created_at ASC
+      SELECT 
+        s.id,
+        s.user_id,
+        u.player_name,
+        s.pegs,
+        s.disks,
+        s.user_moves,
+        s.target_moves,
+        s.is_optimal,
+        s.time_taken_ms,
+        s.created_at
+      FROM hanoi_scores s
+      JOIN hanoi_users u ON s.user_id = u.user_id
+      ORDER BY s.disks DESC, s.user_moves ASC, s.time_taken_ms ASC, s.created_at ASC
       LIMIT 100
     `);
 
@@ -37,7 +47,7 @@ export async function POST(request) {
       time_taken_ms,
     } = await request.json();
 
-    // Validate required fields
+    // Validation
     if (
       !player_name ||
       pegs == null ||
@@ -56,14 +66,35 @@ export async function POST(request) {
       );
     }
 
+    // --- 1. Ensure user exists in hanoi_users ---
+    let userResult = await db.query(
+      `SELECT user_id FROM hanoi_users WHERE player_name = ? LIMIT 1`,
+      [player_name]
+    );
+
+    let finalUserId;
+
+    if (userResult.length > 0) {
+      // Existing user
+      finalUserId = userResult[0].user_id;
+    } else {
+      // Create new user
+      const insertUser = await db.execute(
+        `INSERT INTO hanoi_users (player_name) VALUES (?)`,
+        [player_name]
+      );
+      finalUserId = insertUser.insertId;
+    }
+
+    // --- 2. Insert score into hanoi_scores ---
     const result = await db.execute(
       `
-      INSERT INTO scores (user_id, player_name, pegs, disks, user_moves, target_moves, is_optimal, time_taken_ms)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO hanoi_scores 
+      (user_id, pegs, disks, user_moves, target_moves, is_optimal, time_taken_ms)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
       `,
       [
-        user_id || "anonymous",
-        player_name,
+        finalUserId,
         pegs,
         disks,
         user_moves,

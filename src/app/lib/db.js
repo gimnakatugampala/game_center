@@ -1,18 +1,22 @@
+// lib/db.js
 import mysql from "mysql2/promise";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-export const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: Number(process.env.DB_PORT),
+// --- Create a connection pool ---
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "",
+  database: process.env.DB_NAME || "hanoi_game",
+  port: Number(process.env.DB_PORT) || 3306,
   waitForConnections: true,
   connectionLimit: 10,
+  queueLimit: 0,
 });
 
+// --- Execute a query with parameters (INSERT, UPDATE, DELETE) ---
 async function execute(query, params = []) {
   try {
     const [results] = await pool.execute(query, params);
@@ -23,6 +27,7 @@ async function execute(query, params = []) {
   }
 }
 
+// --- Query rows (SELECT) ---
 async function query(sql, params = []) {
   try {
     const [rows] = await pool.query(sql, params);
@@ -33,6 +38,7 @@ async function query(sql, params = []) {
   }
 }
 
+// --- Test database connection ---
 async function testConnection() {
   try {
     const connection = await pool.getConnection();
@@ -50,6 +56,7 @@ async function testConnection() {
   }
 }
 
+// --- Export ---
 const db = {
   execute,
   query,

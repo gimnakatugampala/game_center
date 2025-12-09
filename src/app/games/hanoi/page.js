@@ -5,6 +5,7 @@ import SetupPanel from "../../components/hanoi/SetupPanel";
 import StatusAndSolver from "../../components/hanoi/StatusAndSolver";
 import PegsDisplay from "../../components/hanoi/PegsDisplay";
 import Leaderboard from "../../components/hanoi/Leaderboard";
+import MovesCard from "../../components/hanoi/MovesCard";
 
 import {
   initializePegs,
@@ -12,7 +13,7 @@ import {
   minMoves3Pegs,
   minMoves4Pegs,
   solveHanoi3PegsRecursive,
-  solveHanoi4PegsFrameStewart,
+  solveHanoi4PFrameStewart,
   fetchLeaderboard,
   postScore,
   MAX_DISKS,
@@ -20,14 +21,6 @@ import {
   ALGORITHM_OPTIONS_3P,
   ALGORITHM_OPTIONS_4P,
 } from "../../components/hanoi/hanoi-utils.js";
-
-const formatTime = (ms) => {
-  if (!ms) return "-";
-  const totalSeconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes}m ${seconds}s`;
-};
 
 const Page = () => {
   // --- Game State ---
@@ -37,7 +30,7 @@ const Page = () => {
   const [selectedPeg, setSelectedPeg] = useState(null);
   const [moveCount, setMoveCount] = useState(0);
   const [startTime, setStartTime] = useState(null);
-  const [gameStatus, setGameStatus] = useState("SETUP"); // SETUP | PLAYING | SOLVING | WON | GAMEOVER
+  const [gameStatus, setGameStatus] = useState("SETUP"); // SETUP | PLAYING | SOLVING | WON | GAMEOVER | SHOW_DESCRIPTION
   const [playerName, setPlayerName] = useState("");
 
   // --- Solver Options ---
@@ -48,7 +41,7 @@ const Page = () => {
     ALGORITHM_OPTIONS_4P.FRAME_STEWART
   );
 
-  // --- Auto-Solve ---
+  // --- Auto-Solve / Optimal Solution ---
   const [solutionMoves, setSolutionMoves] = useState([]);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
   const [isAutoSolving, setIsAutoSolving] = useState(false);
@@ -124,23 +117,18 @@ const Page = () => {
   const handlePegClick = useCallback(
     (pegIndex) => {
       if (gameStatus !== "PLAYING" || isAutoSolving) return;
-
       if (selectedPeg === null) {
         if (pegs[pegIndex]?.length > 0) setSelectedPeg(pegIndex);
         return;
       }
-
       const sourceIndex = selectedPeg;
       const destIndex = pegIndex;
       setSelectedPeg(null);
-
       if (sourceIndex === destIndex) return;
-
       if (isMoveValid(pegs, sourceIndex, destIndex)) {
         setPegs((prev) => {
-          const newPegs = prev.map((peg) => [...peg]);
-          const disk = newPegs[sourceIndex].pop();
-          newPegs[destIndex].push(disk);
+          const newPegs = prev.map((p) => [...p]);
+          newPegs[destIndex].push(newPegs[sourceIndex].pop());
           return newPegs;
         });
         setMoveCount((c) => c + 1);
@@ -154,12 +142,18 @@ const Page = () => {
     if (N === 0 || gameStatus !== "PLAYING") return;
 
     const moves = [];
+    // Reset pegs and move count before auto-solving
     setPegs(initializePegs(N, P));
     setMoveCount(0);
     setCurrentMoveIndex(0);
 
-    if (P === 3) solveHanoi3PegsRecursive(N, 0, P - 1, 1, moves);
-    else solveHanoi4PegsFrameStewart(N, 0, P - 1, [1, 2], moves);
+    if (P === 3) {
+      // 3 Pegs Optimal
+      solveHanoi3PegsRecursive(N, 0, P - 1, 1, moves);
+    } else if (P === 4) {
+      // 4 Pegs Frame-Stewart Optimal
+      solveHanoi4PFrameStewart(N, 0, P - 1, [1, 2], moves);
+    }
 
     setSolutionMoves(moves);
     setIsAutoSolving(true);
@@ -176,25 +170,36 @@ const Page = () => {
 
     const timer = setTimeout(() => {
       const { from, to } = solutionMoves[currentMoveIndex];
+
       setPegs((prev) => {
-        const newPegs = prev.map((peg) => [...peg]);
-        if (newPegs[from].length > 0) newPegs[to].push(newPegs[from].pop());
+        const newPegs = prev.map((p) => [...p]);
+        newPegs[to].push(newPegs[from].pop());
         return newPegs;
       });
+
       setMoveCount((c) => c + 1);
       setCurrentMoveIndex((c) => c + 1);
-    }, 200);
+    }, 200); // Adjust speed here (ms)
 
     return () => clearTimeout(timer);
   }, [isAutoSolving, currentMoveIndex, solutionMoves]);
 
-  // --- Post Score When Game is Won ---
+  // --- Post Score & Generate Optimal Solution on Manual Win ---
   useEffect(() => {
-    if (!isGameWon || gameStatus !== "PLAYING") return;
+    if (!isGameWon) return;
 
-    setGameStatus("WON");
+    if (gameStatus !== "WON" && gameStatus !== "SHOW_DESCRIPTION")
+      setGameStatus("WON");
+
+    // Generate optimal moves if not generated yet
+    if (solutionMoves.length === 0) {
+      const moves = [];
+      if (P === 3) solveHanoi3PegsRecursive(N, 0, P - 1, 1, moves);
+      else solveHanoi4PegsFrameStewart(N, 0, P - 1, [1, 2], moves);
+      setSolutionMoves(moves);
+    }
+
     const timeTakenMs = Date.now() - startTime;
-
     const scoreData = {
       user_id: "anonymous",
       player_name: playerName || "Anonymous",
@@ -250,7 +255,6 @@ const Page = () => {
 
       {/* Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-        {/* Setup Panel */}
         <SetupPanel
           playerName={playerName}
           setPlayerName={setPlayerName}
@@ -269,7 +273,7 @@ const Page = () => {
         />
 
         {/* Game Display */}
-        <div className="p-6 bg-gray-800 rounded-3xl shadow-2xl flex flex-col items-center space-y-6">
+        <div className="p-6 bg-gray-900 rounded-3xl shadow-2xl border border-gray-800 w-full max-w-lg mx-auto space-y-6">
           {gameStatus === "PLAYING" && (
             <div className="text-lg font-semibold text-yellow-400 animate-pulse">
               Time Remaining: {Math.floor(remainingTime / 60)}:
@@ -277,13 +281,13 @@ const Page = () => {
             </div>
           )}
 
-          <h2 className="text-3xl font-bold text-gray-100 text-center tracking-wide">
+          <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500 text-center mb-8">
             {gameStatus === "SETUP"
               ? "Ready to Start"
               : `Game: ${N} Disks, ${P} Pegs`}
           </h2>
 
-          {N > 0 && pegs.length > 0 ? (
+          {N > 0 && pegs.length > 0 && (
             <PegsDisplay
               pegs={pegs}
               P={P}
@@ -293,16 +297,9 @@ const Page = () => {
               handlePegClick={handlePegClick}
               isAutoSolving={isAutoSolving}
             />
-          ) : (
-            <div className="h-80 flex items-center justify-center bg-gray-700 rounded-2xl border-2 border-dashed border-gray-600 w-full">
-              <p className="text-gray-400 text-lg text-center px-4">
-                Use the panel on the left to set the game parameters and start a
-                new game.
-              </p>
-            </div>
           )}
 
-          {["PLAYING", "SOLVING"].includes(gameStatus) && (
+          {["PLAYING", "SOLVING", "WON"].includes(gameStatus) && (
             <StatusAndSolver
               N={N}
               P={P}
@@ -326,39 +323,83 @@ const Page = () => {
       </div>
 
       {/* Overlay on Game End */}
-      {(gameStatus === "WON" || gameStatus === "GAMEOVER") && (
-        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 p-10 rounded-3xl shadow-2xl text-center max-w-lg w-full animate-fadeIn">
-            <h3 className="text-4xl font-extrabold mb-4 text-indigo-400">
-              {gameStatus === "WON"
-                ? isAutoSolving
-                  ? "Solved by Algorithm!"
-                  : "🎉 You Solved It!"
-                : "⏱ Time's Up! Game Over"}
-            </h3>
-            {gameStatus === "WON" && (
-              <p className="text-xl text-gray-100 mb-6">
-                Total Moves:{" "}
-                <span
-                  className={`font-bold ${
-                    moveCount === optimalMoves
-                      ? "text-green-400"
-                      : "text-red-400"
-                  }`}
+      {(gameStatus === "WON" || gameStatus === "GAMEOVER") &&
+        gameStatus !== "SHOW_DESCRIPTION" && (
+          <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-900 p-10 rounded-3xl shadow-2xl text-center max-w-lg w-full animate-fadeIn space-y-6">
+              <h3 className="text-4xl font-extrabold mb-2 text-indigo-400">
+                {gameStatus === "WON"
+                  ? isAutoSolving
+                    ? "Solved by Algorithm!"
+                    : "🎉 You Solved It!"
+                  : "⏱ Time's Up! Game Over"}
+              </h3>
+
+              {gameStatus === "WON" && (
+                <p className="text-xl text-gray-100">
+                  Total Moves:{" "}
+                  <span
+                    className={`font-bold ${
+                      moveCount === optimalMoves
+                        ? "text-green-400"
+                        : "text-red-400"
+                    }`}
+                  >
+                    {moveCount}
+                  </span>{" "}
+                  (Optimal:{" "}
+                  <span className="font-bold text-green-400">
+                    {optimalMoves}
+                  </span>
+                  )
+                </p>
+              )}
+
+              <div className="flex flex-col md:flex-row gap-4 justify-center mt-4">
+                {gameStatus === "WON" && solutionMoves.length > 0 && (
+                  <button
+                    onClick={() => setGameStatus("SHOW_DESCRIPTION")}
+                    className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-2xl transition duration-150 shadow-lg hover:scale-[1.02]"
+                  >
+                    Show Description
+                  </button>
+                )}
+                <button
+                  onClick={resetGame}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl transition duration-150 shadow-lg hover:scale-[1.02]"
                 >
-                  {moveCount}
-                </span>{" "}
-                (Optimal:{" "}
-                <span className="font-bold text-green-400">{optimalMoves}</span>
-                )
-              </p>
-            )}
-            <button
-              onClick={resetGame}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl transition duration-150 shadow-lg hover:scale-[1.02]"
-            >
-              Play Again
-            </button>
+                  Play Again
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* Show Description Modal */}
+      {gameStatus === "SHOW_DESCRIPTION" && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex flex-col items-center justify-start z-50 p-4 overflow-y-auto">
+          <div className="bg-gray-900 p-6 rounded-3xl shadow-2xl text-center max-w-3xl w-full mt-16 space-y-4">
+            <h3 className="text-3xl font-extrabold text-indigo-400 mb-4">
+              Optimal Solution Steps
+            </h3>
+
+            <MovesCard moves={solutionMoves} />
+
+            <div className="flex justify-center gap-4 mt-4">
+              <button
+                onClick={() => setGameStatus("WON")}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl transition duration-150 shadow-lg hover:scale-[1.02]"
+              >
+                Close Description
+              </button>
+
+              <button
+                onClick={resetGame}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl transition duration-150 shadow-lg hover:scale-[1.02]"
+              >
+                Play Again
+              </button>
+            </div>
           </div>
         </div>
       )}

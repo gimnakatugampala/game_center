@@ -1,22 +1,24 @@
-// Constants for Tower of Hanoi application
+// ----------------------------
+// hanoi-utils.js
+// ----------------------------
+
+// --- Constants ---
 export const MIN_DISKS = 3;
 export const MAX_DISKS = 10;
 export const PEGS_OPTIONS = [3, 4];
 
 // --- Solver Algorithm Options ---
-// 3 Pegs: Optimal + Heuristic
 export const ALGORITHM_OPTIONS_3P = {
   RECURSIVE: "Recursive Optimal Solution",
   NON_OPTIMAL: "Non-Optimal Heuristic Solution",
 };
 
-// 4 Pegs: Optimal + Heuristic
 export const ALGORITHM_OPTIONS_4P = {
   FRAME_STEWART: "Frame-Stewart Optimal Solution",
   NON_OPTIMAL: "Non-Optimal Heuristic Solution",
 };
 
-// --- Initialization ---
+// --- Initialize Pegs ---
 export const initializePegs = (N, P) => {
   const pegs = Array(P)
     .fill(0)
@@ -41,81 +43,67 @@ export const minMoves3Pegs = (N) => Math.pow(2, N) - 1;
 export const minMoves4Pegs = (N) => {
   const knownOptimal = [0, 1, 3, 5, 9, 13, 17, 25, 33, 41, 49];
   if (N < knownOptimal.length) return knownOptimal[N];
-  return minMoves3Pegs(N);
+  return minMoves3Pegs(N); // fallback
 };
 
-// --- Solvers ---
-// 3 Pegs Recursive (Optimal)
-export const solveHanoi3PegsRecursive = (
-  N,
-  source,
-  destination,
-  auxiliary,
-  moves
-) => {
+// --- 3-Peg Solvers ---
+// Recursive Optimal
+export const solveHanoi3PegsRecursive = (N, source, dest, aux, moves) => {
   if (N === 0) return;
-  solveHanoi3PegsRecursive(N - 1, source, auxiliary, destination, moves);
-  moves.push({ from: source, to: destination, disk: N });
-  solveHanoi3PegsRecursive(N - 1, auxiliary, destination, source, moves);
+  solveHanoi3PegsRecursive(N - 1, source, aux, dest, moves);
+  moves.push({ from: source, to: dest, disk: N });
+  solveHanoi3PegsRecursive(N - 1, aux, dest, source, moves);
 };
 
-// 3 Pegs Non-Optimal Heuristic
-export const solveHanoi3PegsHeuristic = (
-  N,
-  source,
-  destination,
-  auxiliary,
-  moves
-) => {
+// Non-optimal heuristic
+export const solveHanoi3PegsHeuristic = (N, source, dest, aux, moves) => {
   if (N === 0) return;
   if (N === 1) {
-    moves.push({ from: source, to: destination, disk: 1 });
+    moves.push({ from: source, to: dest, disk: 1 });
     return;
   }
-  moves.push({ from: source, to: auxiliary, disk: N });
-  solveHanoi3PegsHeuristic(N - 1, source, destination, auxiliary, moves);
-  moves.push({ from: auxiliary, to: destination, disk: N });
+  moves.push({ from: source, to: aux, disk: N });
+  solveHanoi3PegsHeuristic(N - 1, source, dest, aux, moves);
+  moves.push({ from: aux, to: dest, disk: N });
 };
 
-// 4 Pegs Frame-Stewart (Optimal)
-export const solveHanoi4PegsFrameStewart = (
-  N,
-  source,
-  destination,
-  auxiliaries,
-  moves
-) => {
-  if (N === 0) return;
-  if (N === 1) {
-    moves.push({ from: source, to: destination, disk: 1 });
+// --- 4-Peg Solvers ---
+// Frame-Stewart Optimal
+export const solveHanoi4PFrameStewart = (n, from, to, aux, moves) => {
+  if (n === 0) return;
+
+  if (n === 1) {
+    moves.push({ from, to, disk: 1 });
     return;
   }
-  const k = Math.floor(N / 2) || 1;
-  const [aux1, aux2] = auxiliaries;
 
-  solveHanoi3PegsRecursive(k, source, aux1, aux2, moves);
-  for (let i = 0; i < N - k; i++)
-    moves.push({ from: source, to: destination, disk: k + i + 1 });
-  solveHanoi3PegsRecursive(k, aux1, destination, aux2, moves);
+  // Determine k optimally (heuristic)
+  let k = n - Math.round(Math.sqrt(2 * n + 1)) + 1;
+  if (k < 1) k = 1;
+
+  const [aux1, aux2] = aux;
+
+  // Step 1: Move k disks to first auxiliary peg using 4 pegs
+  solveHanoi4PFrameStewart(k, from, aux1, [aux2, to], moves);
+
+  // Step 2: Move remaining disks (n-k) to target peg using 3 pegs
+  solveHanoi3PegsRecursive(n - k, from, to, aux2, moves);
+
+  // Step 3: Move k disks from first auxiliary peg to target peg using 4 pegs
+  solveHanoi4PFrameStewart(k, aux1, to, [aux2, from], moves);
 };
 
-// 4 Pegs Non-Optimal Heuristic
-export const solveHanoi4PegsHeuristic = (
-  N,
-  source,
-  destination,
-  auxiliaries,
-  moves
-) => {
+// Non-optimal heuristic
+export const solveHanoi4PegsHeuristic = (N, source, dest, aux, moves) => {
   if (N === 0) return;
   if (N === 1) {
-    moves.push({ from: source, to: destination, disk: 1 });
+    moves.push({ from: source, to: dest, disk: 1 });
     return;
   }
-  const [aux1] = auxiliaries;
+  const [aux1] = aux;
   moves.push({ from: source, to: aux1, disk: N });
-  solveHanoi4PegsHeuristic(N - 1, source, destination, auxiliaries, moves);
-  moves.push({ from: aux1, to: destination, disk: N });
+  solveHanoi4PegsHeuristic(N - 1, source, dest, aux, moves);
+  moves.push({ from: aux1, to: dest, disk: N });
 };
 
 // --- API Integration ---
