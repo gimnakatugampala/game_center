@@ -1,0 +1,59 @@
+"use client";
+import Link from "next/link";
+import { useState } from "react";
+
+export default function Header() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  return (
+    <header className="bg-gray-900/90 backdrop-blur-sm shadow-lg sticky top-0 z-50">
+      <nav className="container mx-auto flex justify-between items-center py-4 px-6 md:px-10">
+        {/* Logo */}
+        <div className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-500 to-pink-500 tracking-wide">
+          Game Center
+        </div>
+
+        {/* Desktop Menu */}
+        <ul className="hidden md:flex space-x-8 text-gray-300 font-medium">
+          <li>
+            <Link
+              href="/"
+              className="relative group hover:text-white transition-colors duration-200"
+            >
+              Home
+              <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-gradient-to-r from-indigo-400 via-purple-500 to-pink-500 transition-all group-hover:w-full"></span>
+            </Link>
+          </li>
+        </ul>
+
+        {/* Mobile Menu Button */}
+        <button
+          className="md:hidden text-gray-300 hover:text-white transition-colors duration-200 text-2xl"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-label="Toggle Menu"
+        >
+          {isMenuOpen ? "✖" : "☰"}
+        </button>
+      </nav>
+
+      {/* Mobile Menu */}
+      <div
+        className={`md:hidden overflow-hidden transition-all duration-300 ${
+          isMenuOpen ? "max-h-64" : "max-h-0"
+        } bg-gray-900/95 backdrop-blur-sm shadow-inner`}
+      >
+        <ul className="flex flex-col space-y-2 p-4 text-gray-300">
+          <li>
+            <Link
+              href="/"
+              className="block px-2 py-2 rounded-lg hover:bg-gray-800/60 hover:text-white transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Home
+            </Link>
+          </li>
+        </ul>
+      </div>
+    </header>
+  );
+}
