@@ -79,7 +79,7 @@ const Leaderboard = () => {
   return (
     <div className="p-6 bg-gray-900 rounded-3xl shadow-2xl border border-gray-800 w-full max-w-lg mx-auto space-y-6">
       <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500 text-center mb-8">
-        Leaderboard (Top 10)
+        Leaderboard <br /> (Top 10)
       </h2>
 
       <div className="flex flex-wrap gap-6 justify-center">

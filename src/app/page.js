@@ -93,11 +93,11 @@ const GameCenterDashboard = () => {
           </div>
           <div className="bg-slate-800/50 backdrop-blur-md px-6 py-3 rounded-full border border-green-500/30">
             <span className="text-slate-400 text-sm">Available:</span>
-            <span className="text-green-400 font-bold text-lg ml-2">2</span>
+            <span className="text-green-400 font-bold text-lg ml-2">3</span>
           </div>
           <div className="bg-slate-800/50 backdrop-blur-md px-6 py-3 rounded-full border border-yellow-500/30">
             <span className="text-slate-400 text-sm">Coming Soon:</span>
-            <span className="text-yellow-400 font-bold text-lg ml-2">3</span>
+            <span className="text-yellow-400 font-bold text-lg ml-2">2</span>
           </div>
         </div>
       </header>
