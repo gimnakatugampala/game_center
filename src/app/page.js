@@ -1,65 +1,67 @@
-'use client';
-import React, { useState } from 'react';
+"use client";
+import React, { useState } from "react";
 
 const GameCenterDashboard = () => {
   const [hoveredGame, setHoveredGame] = useState(null);
 
   const games = [
     {
-      id: 'snake-ladder',
-      title: 'Snake and Ladder',
-      icon: '🎲',
-      description: 'Find the minimum dice throws using BFS and Dynamic Programming',
-      color: 'from-red-500 to-orange-500',
-      complexity: 'Graph Traversal',
-      algorithms: ['BFS', 'Dynamic Programming'],
-      route: '/games/snake-ladder',
-      implemented: false
+      id: "snake-ladder",
+      title: "Snake and Ladder",
+      icon: "🎲",
+      description:
+        "Find the minimum dice throws using BFS and Dynamic Programming",
+      color: "from-red-500 to-orange-500",
+      complexity: "Graph Traversal",
+      algorithms: ["BFS", "Dynamic Programming"],
+      route: "/games/snake-ladder",
+      implemented: false,
     },
     {
-      id: 'traffic',
-      title: 'Traffic Simulation',
-      icon: '🚦',
-      description: 'Calculate maximum flow using Ford-Fulkerson and Edmonds-Karp',
-      color: 'from-green-500 to-emerald-500',
-      complexity: 'Network Flow',
-      algorithms: ['Ford-Fulkerson', 'Edmonds-Karp'],
-      route: '/games/traffic',
-      implemented: false
+      id: "traffic",
+      title: "Traffic Simulation",
+      icon: "🚦",
+      description:
+        "Calculate maximum flow using Ford-Fulkerson and Edmonds-Karp",
+      color: "from-green-500 to-emerald-500",
+      complexity: "Network Flow",
+      algorithms: ["Ford-Fulkerson", "Edmonds-Karp"],
+      route: "/games/traffic",
+      implemented: false,
     },
     {
-      id: 'tsp',
-      title: 'Traveling Salesman',
-      icon: '🗺️',
-      description: 'Find the shortest route through all cities',
-      color: 'from-indigo-500 to-purple-600',
-      complexity: 'NP-Complete',
-      algorithms: ['Nearest Neighbor', 'Brute Force', 'Dynamic Programming'],
-      route: '/games/tsp',
-      implemented: true
+      id: "tsp",
+      title: "Traveling Salesman",
+      icon: "🗺️",
+      description: "Find the shortest route through all cities",
+      color: "from-indigo-500 to-purple-600",
+      complexity: "NP-Complete",
+      algorithms: ["Nearest Neighbor", "Brute Force", "Dynamic Programming"],
+      route: "/games/tsp",
+      implemented: true,
     },
     {
-      id: 'hanoi',
-      title: 'Tower of Hanoi',
-      icon: '🗼',
-      description: 'Solve the classic puzzle with 3 or 4 pegs',
-      color: 'from-yellow-500 to-amber-600',
-      complexity: 'Recursive',
-      algorithms: ['Classic Recursion', 'Frame-Stewart'],
-      route: '/games/hanoi',
-      implemented: false
+      id: "hanoi",
+      title: "Tower of Hanoi",
+      icon: "🗼",
+      description: "Solve the classic puzzle with 3 or 4 pegs",
+      color: "from-yellow-500 to-amber-600",
+      complexity: "Recursive",
+      algorithms: ["Classic Recursion", "Frame-Stewart"],
+      route: "/games/hanoi",
+      implemented: true,
     },
     {
-      id: 'queens',
-      title: 'Eight Queens',
-      icon: '♛',
-      description: 'Place 8 queens on a chessboard without conflicts',
-      color: 'from-pink-500 to-purple-600',
-      complexity: 'Backtracking',
-      algorithms: ['Sequential', 'Threaded'],
-      route: '/games/queens',
-      implemented: true
-    }
+      id: "queens",
+      title: "Eight Queens",
+      icon: "♛",
+      description: "Place 8 queens on a chessboard without conflicts",
+      color: "from-pink-500 to-purple-600",
+      complexity: "Backtracking",
+      algorithms: ["Sequential", "Threaded"],
+      route: "/games/queens",
+      implemented: true,
+    },
   ];
 
   const handleGameClick = (game) => {
@@ -70,7 +72,6 @@ const GameCenterDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f0f1e] via-[#1a1a2e] to-[#16213e] p-5 font-sans">
-      
       {/* Header */}
       <header className="text-center mb-12 pt-8">
         <div className="inline-block mb-6">
@@ -80,9 +81,10 @@ const GameCenterDashboard = () => {
           Algorithm Game Center
         </h1>
         <p className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
-          Learn algorithms through interactive games. Challenge yourself with classic computer science problems!
+          Learn algorithms through interactive games. Challenge yourself with
+          classic computer science problems!
         </p>
-        
+
         {/* Stats Bar */}
         <div className="flex justify-center gap-8 mt-8 flex-wrap">
           <div className="bg-slate-800/50 backdrop-blur-md px-6 py-3 rounded-full border border-indigo-500/30">
@@ -111,14 +113,15 @@ const GameCenterDashboard = () => {
             className={`
               relative bg-slate-800/60 backdrop-blur-lg rounded-2xl p-6 
               border-2 transition-all duration-300
-              ${game.implemented 
-                ? 'border-slate-700/50 hover:border-indigo-500/50 cursor-pointer hover:-translate-y-2 hover:shadow-2xl hover:shadow-indigo-500/20' 
-                : 'border-slate-700/30 opacity-75 cursor-not-allowed'
+              ${
+                game.implemented
+                  ? "border-slate-700/50 hover:border-indigo-500/50 cursor-pointer hover:-translate-y-2 hover:shadow-2xl hover:shadow-indigo-500/20"
+                  : "border-slate-700/30 opacity-75 cursor-not-allowed"
               }
             `}
             style={{
               animationDelay: `${index * 0.1}s`,
-              animation: 'fadeInUp 0.6s ease-out forwards'
+              animation: "fadeInUp 0.6s ease-out forwards",
             }}
           >
             {/* Status Badge */}
@@ -135,17 +138,21 @@ const GameCenterDashboard = () => {
             )}
 
             {/* Game Icon */}
-            <div className={`
+            <div
+              className={`
               text-6xl mb-4 transition-transform duration-300
-              ${hoveredGame === game.id && game.implemented ? 'scale-110 rotate-12' : ''}
-            `}>
+              ${
+                hoveredGame === game.id && game.implemented
+                  ? "scale-110 rotate-12"
+                  : ""
+              }
+            `}
+            >
               {game.icon}
             </div>
 
             {/* Game Title */}
-            <h2 className="text-2xl font-bold text-white mb-3">
-              {game.title}
-            </h2>
+            <h2 className="text-2xl font-bold text-white mb-3">{game.title}</h2>
 
             {/* Game Description */}
             <p className="text-slate-400 text-sm mb-4 leading-relaxed">
@@ -154,10 +161,12 @@ const GameCenterDashboard = () => {
 
             {/* Complexity Badge */}
             <div className="mb-4">
-              <span className={`
+              <span
+                className={`
                 inline-block px-3 py-1 rounded-lg text-xs font-bold
                 bg-gradient-to-r ${game.color} text-white
-              `}>
+              `}
+              >
                 {game.complexity}
               </span>
             </div>
@@ -181,13 +190,15 @@ const GameCenterDashboard = () => {
 
             {/* Play Button */}
             {game.implemented ? (
-              <button className={`
+              <button
+                className={`
                 w-full py-3 rounded-xl font-bold text-white text-sm
                 bg-gradient-to-r ${game.color}
                 transition-all duration-300
                 hover:shadow-lg hover:shadow-indigo-500/50
                 active:scale-95
-              `}>
+              `}
+              >
                 🎮 Play Now →
               </button>
             ) : (
@@ -214,7 +225,8 @@ const GameCenterDashboard = () => {
             <div className="text-4xl mb-3">🧠</div>
             <h4 className="text-white font-bold mb-2">Learn Algorithms</h4>
             <p className="text-slate-400 text-sm">
-              Master classic computer science algorithms through interactive gameplay
+              Master classic computer science algorithms through interactive
+              gameplay
             </p>
           </div>
           <div className="text-center p-6 bg-slate-900/30 rounded-xl border border-slate-700/20">
