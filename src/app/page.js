@@ -246,12 +246,6 @@ const GameCenterDashboard = () => {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="text-center text-slate-500 text-sm pb-8">
-        <p>BSc (Hons) Computing - PDSA Coursework | Batch 25.1</p>
-        <p className="mt-2">National Institute of Business Management</p>
-      </footer>
-
       <style jsx>{`
         @keyframes fadeInUp {
           from {

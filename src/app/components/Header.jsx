@@ -6,7 +6,7 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="bg-gray-900/90 backdrop-blur-sm shadow-lg sticky top-0 z-50">
+    <header className="bg-gradient-to-br from-[#0f0f1e] via-[#1a1a2e] to-[#16213e] backdrop-blur-sm shadow-lg sticky top-0 z-50">
       <nav className="container mx-auto flex justify-between items-center py-4 px-6 md:px-10">
         {/* Logo */}
         <div className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-500 to-pink-500 tracking-wide">
@@ -21,6 +21,16 @@ export default function Header() {
               className="relative group hover:text-white transition-colors duration-200"
             >
               Home
+              <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-gradient-to-r from-indigo-400 via-purple-500 to-pink-500 transition-all group-hover:w-full"></span>
+            </Link>
+          </li>
+
+          <li>
+            <Link
+              href="/AboutUs"
+              className="relative group hover:text-white transition-colors duration-200"
+            >
+              About Us
               <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-gradient-to-r from-indigo-400 via-purple-500 to-pink-500 transition-all group-hover:w-full"></span>
             </Link>
           </li>
@@ -50,6 +60,15 @@ export default function Header() {
               onClick={() => setIsMenuOpen(false)}
             >
               Home
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/AboutUs"
+              className="block px-2 py-2 rounded-lg hover:bg-gray-800/60 hover:text-white transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              About Us
             </Link>
           </li>
         </ul>
