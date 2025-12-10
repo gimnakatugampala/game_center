@@ -1,10 +1,11 @@
 // ----------------------------
 // hanoi-utils.js
 // ----------------------------
-
 // --- Constants ---
 export const MIN_DISKS = 3;
 export const MAX_DISKS = 10;
+const randomValue = Math.floor(Math.random() * (MAX_DISKS - 5 + 1)) + 5;
+export const RANDOM_DISKS = randomValue;
 export const PEGS_OPTIONS = [3, 4];
 
 // --- Solver Algorithm Options ---

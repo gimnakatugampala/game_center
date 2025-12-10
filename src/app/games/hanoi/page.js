@@ -16,7 +16,7 @@ import {
   solveHanoi4PFrameStewart,
   fetchLeaderboard,
   postScore,
-  MAX_DISKS,
+  RANDOM_DISKS,
   MIN_DISKS,
   ALGORITHM_OPTIONS_3P,
   ALGORITHM_OPTIONS_4P,
@@ -24,7 +24,7 @@ import {
 
 const Page = () => {
   // --- Game State ---
-  const [N, setN] = useState(MIN_DISKS);
+  const [N, setN] = useState(RANDOM_DISKS);
   const [P, setP] = useState(3);
   const [pegs, setPegs] = useState([]);
   const [selectedPeg, setSelectedPeg] = useState(null);
@@ -228,7 +228,7 @@ const Page = () => {
   const resetGame = useCallback(() => {
     setGameStatus("SETUP");
     setPegs([]);
-    setN(MIN_DISKS);
+    setN(RANDOM_DISKS);
     setSelectedPeg(null);
     setMoveCount(0);
     setSolutionMoves([]);
