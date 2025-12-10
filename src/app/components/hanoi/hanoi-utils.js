@@ -74,25 +74,17 @@ export const solveHanoi3PegsHeuristic = (N, source, dest, aux, moves) => {
 // Frame-Stewart Optimal
 export const solveHanoi4PFrameStewart = (n, from, to, aux, moves) => {
   if (n === 0) return;
-
   if (n === 1) {
     moves.push({ from, to, disk: 1 });
     return;
   }
-
   // Determine k optimally (heuristic)
   let k = n - Math.round(Math.sqrt(2 * n + 1)) + 1;
   if (k < 1) k = 1;
 
   const [aux1, aux2] = aux;
-
-  // Step 1: Move k disks to first auxiliary peg using 4 pegs
   solveHanoi4PFrameStewart(k, from, aux1, [aux2, to], moves);
-
-  // Step 2: Move remaining disks (n-k) to target peg using 3 pegs
   solveHanoi3PegsRecursive(n - k, from, to, aux2, moves);
-
-  // Step 3: Move k disks from first auxiliary peg to target peg using 4 pegs
   solveHanoi4PFrameStewart(k, aux1, to, [aux2, from], moves);
 };
 

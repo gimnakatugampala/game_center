@@ -3,41 +3,6 @@
 import React from "react";
 
 // ----------------------
-// 3-Peg Recursive Solver
-// ----------------------
-export function solveHanoi3PegsRecursive(n, from, to, aux, moves) {
-  if (n === 0) return;
-  solveHanoi3PegsRecursive(n - 1, from, aux, to, moves);
-  moves.push({ from, to });
-  solveHanoi3PegsRecursive(n - 1, aux, to, from, moves);
-}
-
-// ----------------------
-// 4-Peg Frame-Stewart Solver
-// ----------------------
-export function solveHanoi4PFrameStewart(n, from, to, aux, moves) {
-  if (n === 0) return;
-
-  if (n === 1) {
-    moves.push({ from, to });
-    return;
-  }
-
-  // Frame-Stewart heuristic: k ≈ n - round(sqrt(2*n+1)) + 1
-  let k = n - Math.round(Math.sqrt(2 * n + 1)) + 1;
-  if (k < 1) k = 1;
-
-  // Move k disks to first auxiliary peg
-  solveHanoi4PFrameStewart(k, from, aux[0], [aux[1], to], moves);
-
-  // Move remaining disks using 3-peg solution
-  solveHanoi3PegsRecursive(n - k, from, to, aux[1], moves);
-
-  // Move k disks from first auxiliary peg to target
-  solveHanoi4PFrameStewart(k, aux[0], to, [aux[1], from], moves);
-}
-
-// ----------------------
 // Component
 // ----------------------
 const StatusAndSolver = ({

@@ -34,7 +34,7 @@ const SetupPanel = ({
   const isSetup = gameStatus === "SETUP";
 
   // -------------------------------
-  // FIXED: Random/Manual Disk Mode
+  // Random/Manual Disk Mode
   // -------------------------------
   const [useRandomN, setUseRandomN] = useState(true);
 
