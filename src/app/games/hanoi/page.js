@@ -24,7 +24,7 @@ import {
 
 const Page = () => {
   // --- Game State ---
-  const [N, setN] = useState(RANDOM_DISKS);
+  const [N, setN] = useState(0); // SSR SAFE
   const [P, setP] = useState(3);
   const [pegs, setPegs] = useState([]);
   const [selectedPeg, setSelectedPeg] = useState(null);
@@ -83,6 +83,12 @@ const Page = () => {
   useEffect(() => {
     loadLeaderboardData();
   }, [loadLeaderboardData]);
+
+  // Randomize N only on client
+  useEffect(() => {
+    const random = Math.floor(Math.random() * (10 - 5 + 1)) + 5;
+    setN(random);
+  }, []);
 
   // --- Setup Game ---
   const handleSetupGame = useCallback((N_disks, P_pegs, timeSec) => {
