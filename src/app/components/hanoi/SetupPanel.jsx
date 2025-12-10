@@ -40,8 +40,7 @@ const SetupPanel = ({
 
   useEffect(() => {
     if (useRandomN) {
-      const randomValue =
-        Math.floor(Math.random() * (MAX_RANDOM - MIN_RANDOM + 1)) + MIN_RANDOM;
+      const randomValue = Math.floor(Math.random() * 6) + 5;
       setN(randomValue);
     }
   }, [useRandomN, setN]);
