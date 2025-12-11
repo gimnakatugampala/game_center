@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   PEGS_OPTIONS,
   MIN_DISKS,
@@ -8,6 +8,10 @@ import {
   ALGORITHM_OPTIONS_3P,
   ALGORITHM_OPTIONS_4P,
 } from "./hanoi-utils";
+import GameDescription from "./gameDescription";
+
+const MIN_RANDOM = 5;
+const MAX_RANDOM = 10;
 
 const SetupPanel = ({
   playerName,
@@ -29,10 +33,24 @@ const SetupPanel = ({
 }) => {
   const isSetup = gameStatus === "SETUP";
 
+  // -------------------------------
+  // Random/Manual Disk Mode
+  // -------------------------------
+  const [useRandomN, setUseRandomN] = useState(true);
+
+  useEffect(() => {
+    if (useRandomN) {
+      const randomValue = Math.floor(Math.random() * 6) + 5;
+      setN(randomValue);
+    }
+  }, [useRandomN, setN]);
+
   const currentAlgorithmOptions =
     P === 3 ? ALGORITHM_OPTIONS_3P : ALGORITHM_OPTIONS_4P;
+
   const currentSelectedAlgorithm =
     P === 3 ? selectedAlgorithm3P : selectedAlgorithm4P;
+
   const setSelectedAlgorithm =
     P === 3 ? setSelectedAlgorithm3P : setSelectedAlgorithm4P;
 
@@ -49,14 +67,18 @@ const SetupPanel = ({
     setSelectedAlgorithm4P,
   ]);
 
+  // Hover style consistent with GameDescription
+  const hoverCardClass =
+    "transition-transform duration-200 hover:scale-105 hover:shadow-2xl";
+
   return (
-    <div className="p-6 bg-gray-900 rounded-2xl shadow-2xl border border-gray-800 space-y-6 w-full max-w-md mx-auto">
-      <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500">
+    <div className="p-6 bg-gray-900 rounded-3xl shadow-2xl border border-gray-800 w-full max-w-lg mx-auto space-y-6">
+      <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500 text-center">
         Tower of Hanoi Setup
       </h2>
 
       {/* Player Name */}
-      <div className="space-y-2">
+      <div className={`space-y-2 ${hoverCardClass}`}>
         <label className="block text-sm font-semibold text-gray-400">
           Your Name (for Leaderboard)
         </label>
@@ -66,25 +88,29 @@ const SetupPanel = ({
           onChange={(e) => setPlayerName(e.target.value)}
           placeholder="Enter your name"
           disabled={!isSetup}
-          className="w-full rounded-xl border border-gray-700 bg-gray-800 text-white p-3 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 placeholder-gray-500 transition duration-150 disabled:bg-gray-700/50 disabled:text-gray-500"
+          className="w-full rounded-2xl border border-gray-700 bg-gray-800 text-white p-3 
+          focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 
+          placeholder-gray-500 transition duration-150 
+          disabled:bg-gray-700/50 disabled:text-gray-500"
         />
       </div>
 
       {/* Pegs Selection */}
-      <div className="space-y-2">
+      <div className={`space-y-2 ${hoverCardClass}`}>
         <p className="text-sm font-semibold text-gray-400">
           Number of Pegs (P):
         </p>
-        <div className="flex space-x-4 flex-wrap">
+        <div className="flex gap-3 flex-wrap">
           {PEGS_OPTIONS.map((peg) => (
             <button
               key={peg}
               onClick={() => setP(peg)}
               disabled={!isSetup}
-              className={`flex-1 py-3 rounded-xl font-bold transition-all duration-200 text-white ${
+              className={`flex-1 py-3 rounded-2xl font-bold transition-all duration-200 text-white 
+              ${
                 P === peg
-                  ? "bg-indigo-600 ring-2 ring-indigo-400"
-                  : "bg-gray-800 hover:bg-gray-700"
+                  ? "bg-indigo-600 ring-2 ring-indigo-400 shadow-lg"
+                  : "bg-gray-800 hover:bg-gray-700 hover:shadow-lg"
               }`}
             >
               {peg} Pegs
@@ -93,32 +119,60 @@ const SetupPanel = ({
         </div>
       </div>
 
-      {/* Disks Slider */}
-      <div className="p-4 border border-gray-700 rounded-xl bg-gray-800/60">
-        <label className="block text-sm font-semibold text-gray-400 mb-3 flex justify-between items-center">
-          <span>Number of Disks (N):</span>
-          <span className="text-xl font-extrabold text-indigo-400">{N}</span>
-        </label>
-        <input
-          type="range"
-          min={MIN_DISKS}
-          max={MAX_DISKS}
-          value={N}
-          onChange={(e) => setN(parseInt(e.target.value))}
-          disabled={!isSetup}
-          className="w-full h-2 bg-gray-700 rounded-lg cursor-pointer accent-indigo-500"
-        />
-        <div className="flex justify-between text-xs text-gray-500 mt-1">
-          <span>{MIN_DISKS}</span>
-          <span>{MAX_DISKS}</span>
+      {/* Disk random/manual selection */}
+      <div
+        className={`p-4 border border-gray-700 rounded-2xl bg-gray-800/60 ${hoverCardClass}`}
+      >
+        <div className="flex justify-between items-center mb-3">
+          <label className="text-sm font-semibold text-gray-400">
+            Current Disk Mode:
+          </label>
+
+          <button
+            onClick={() => setUseRandomN(!useRandomN)}
+            disabled={!isSetup}
+            className={`px-3 py-1 rounded-xl text-xs font-bold transition-all 
+              ${
+                useRandomN
+                  ? "bg-red-600 text-white hover:bg-red-800"
+                  : "bg-green-600 text-white hover:bg-green-800"
+              }`}
+          >
+            {useRandomN ? "Random (Hard) " : "Manual (Easy)"}
+          </button>
         </div>
+
+        <div className="text-xl font-extrabold text-indigo-400 mb-2">
+          Number of Disks: {N}
+        </div>
+
+        {/* Slider only when manual mode */}
+        {!useRandomN && (
+          <>
+            <input
+              type="range"
+              min={MIN_DISKS}
+              max={MAX_DISKS}
+              value={N}
+              onChange={(e) => setN(parseInt(e.target.value))}
+              disabled={!isSetup}
+              className="w-full h-2 bg-gray-700 rounded-lg cursor-pointer accent-indigo-500"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>{MIN_DISKS}</span>
+              <span>{MAX_DISKS}</span>
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Time Limit Slider */}
-      <div className="p-4 border border-gray-700 rounded-xl bg-gray-800/60">
+      {/* Time Limit */}
+      <div
+        className={`p-4 border border-gray-700 rounded-2xl bg-gray-800/60 ${hoverCardClass}`}
+      >
         <label className="block text-sm font-semibold text-gray-400 mb-3 flex justify-between items-center">
           <span>Time Limit (seconds):</span>
-          <span className="text-xl font-extrabold text-indigo-400">
+          <span className="text-xl font-extrabold text-green-400">
             {timeLimit}
           </span>
         </label>
@@ -127,7 +181,7 @@ const SetupPanel = ({
           min={MIN_TIME}
           max={MAX_TIME}
           step={5}
-          value={timeLimit || MIN_TIME}
+          value={timeLimit}
           onChange={(e) => setTimeLimit(parseInt(e.target.value))}
           disabled={!isSetup}
           className="w-full h-2 bg-gray-700 rounded-lg cursor-pointer accent-green-400"
@@ -138,22 +192,23 @@ const SetupPanel = ({
         </div>
       </div>
 
-      {/* Algorithm Selection */}
-      <div className="space-y-2">
+      {/* Algorithm Picker */}
+      <div className={`space-y-2 ${hoverCardClass}`}>
         <p className="text-sm font-semibold text-gray-400">
           Solver Algorithm ({P} Pegs)
         </p>
-        <div className="flex flex-col space-y-2">
+        <div className="flex flex-col gap-2">
           {Object.entries(currentAlgorithmOptions).map(([key, label]) => (
             <button
               key={key}
               onClick={() => setSelectedAlgorithm(label)}
               disabled={!isSetup}
-              className={`py-2 px-4 rounded-lg font-medium transition-colors duration-150 text-left ${
-                currentSelectedAlgorithm === label
-                  ? "bg-purple-600 text-white ring-2 ring-purple-400"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-              }`}
+              className={`py-3 px-4 rounded-2xl font-medium text-left transition-all duration-200
+                ${
+                  currentSelectedAlgorithm === label
+                    ? "bg-purple-600 text-white ring-2 ring-purple-400 shadow-2xl"
+                    : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:shadow-lg"
+                }`}
             >
               {label}
             </button>
@@ -161,14 +216,26 @@ const SetupPanel = ({
         </div>
       </div>
 
-      {/* Start Game */}
+      {/* Start Button */}
       <button
         onClick={() => handleSetupGame(N, P, timeLimit)}
         disabled={!playerName || !isSetup}
-        className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 rounded-2xl shadow-lg transition duration-150"
+        className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 
+          text-white font-bold py-4 rounded-2xl shadow-lg transition duration-150 
+          hover:scale-105 hover:shadow-2xl"
       >
         Start Round ({N} Disks, {P} Pegs)
       </button>
+
+      {/* Description */}
+      <div className="mt-6">
+        <GameDescription
+          N={N}
+          P={P}
+          selectedAlgorithm3P={selectedAlgorithm3P}
+          selectedAlgorithm4P={selectedAlgorithm4P}
+        />
+      </div>
     </div>
   );
 };
