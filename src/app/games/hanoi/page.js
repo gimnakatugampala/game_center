@@ -16,49 +16,41 @@ import {
   solveHanoi4PegsFrameStewart,
   fetchLeaderboard,
   postScore,
-  RANDOM_DISKS,
-  MIN_DISKS,
   ALGORITHM_OPTIONS_3P,
   ALGORITHM_OPTIONS_4P,
 } from "../../components/hanoi/hanoi-utils.js";
 
+// Default disks for reset
+const DEFAULT_RANDOM_DISKS = 5;
+
 const Page = () => {
-  // --- Game State ---
-  const [N, setN] = useState(0); // SSR SAFE
+  const [N, setN] = useState(0);
   const [P, setP] = useState(3);
   const [pegs, setPegs] = useState([]);
   const [selectedPeg, setSelectedPeg] = useState(null);
   const [moveCount, setMoveCount] = useState(0);
   const [startTime, setStartTime] = useState(null);
-  const [gameStatus, setGameStatus] = useState("SETUP"); // SETUP | PLAYING | SOLVING | WON | GAMEOVER | SHOW_DESCRIPTION
+  const [gameStatus, setGameStatus] = useState("SETUP");
   const [playerName, setPlayerName] = useState("");
+  const [solutionMoves, setSolutionMoves] = useState([]);
+  const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
+  const [isAutoSolving, setIsAutoSolving] = useState(false);
+  const [timeLimit, setTimeLimit] = useState(30);
+  const [remainingTime, setRemainingTime] = useState(0);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState(null);
+  const [error, setError] = useState("");
 
-  // --- Solver Options ---
   const [selectedAlgorithm3P, setSelectedAlgorithm3P] = useState(
     ALGORITHM_OPTIONS_3P.RECURSIVE
   );
   const [selectedAlgorithm4P, setSelectedAlgorithm4P] = useState(
     ALGORITHM_OPTIONS_4P.FRAME_STEWART
   );
-
-  const [error, setError] = useState("");
   const [gameState, setGameState] = useState("welcome");
 
-  // --- Auto-Solve / Optimal Solution ---
-  const [solutionMoves, setSolutionMoves] = useState([]);
-  const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
-  const [isAutoSolving, setIsAutoSolving] = useState(false);
-
-  // --- Timer ---
-  const [timeLimit, setTimeLimit] = useState(30);
-  const [remainingTime, setRemainingTime] = useState(0);
-
-  // --- Leaderboard ---
-  const [leaderboard, setLeaderboard] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [apiError, setApiError] = useState(null);
-
-  // --- Derived Values ---
+  // Derived
   const optimalMoves = useMemo(
     () => (P === 3 ? minMoves3Pegs(N) : minMoves4Pegs(N)),
     [N, P]
@@ -68,6 +60,7 @@ const Page = () => {
     [pegs, N, P]
   );
 
+  // --- Handle Player Name Submission ---
   const handlePlayerNameSubmit = () => {
     if (!playerName.trim()) {
       setError("Please enter your name to start the game");
@@ -79,25 +72,18 @@ const Page = () => {
       return;
     }
 
-    // Clear any errors
-    setError("");
-
-    // Move to setup or directly start game (your choice)
-    setGameState("setup");
-
-    // OR if you want to instantly start:
-    // startGame();
+    setError(""); // Clear any previous errors
+    setGameState("setup"); // Move to setup phase
   };
 
-  // --- Load Leaderboard ---
+  // Load leaderboard
   const loadLeaderboardData = useCallback(async () => {
     setIsLoading(true);
     setApiError(null);
     try {
       const scores = await fetchLeaderboard();
-      setLeaderboard(scores.slice(0, 10));
-      if (!scores || scores.length === 0) setApiError("No scores found.");
-    } catch (error) {
+      setLeaderboard(scores?.slice(0, 10) || []);
+    } catch (err) {
       setApiError("Failed to load leaderboard.");
     } finally {
       setIsLoading(false);
@@ -108,30 +94,13 @@ const Page = () => {
     loadLeaderboardData();
   }, [loadLeaderboardData]);
 
-  // Randomize N only on client
+  // Randomize disks on client
   useEffect(() => {
     const random = Math.floor(Math.random() * (10 - 5 + 1)) + 5;
     setN(random);
   }, []);
 
-  // --- Setup Game ---
-  const handleSetupGame = useCallback((N_disks, P_pegs, timeSec) => {
-    setN(N_disks);
-    setP(P_pegs);
-    setPegs(initializePegs(N_disks, P_pegs));
-    setSelectedPeg(null);
-    setMoveCount(0);
-    setStartTime(Date.now());
-    setGameStatus("PLAYING");
-    setSolutionMoves([]);
-    setCurrentMoveIndex(0);
-    setIsAutoSolving(false);
-    setTimeLimit(timeSec);
-    setRemainingTime(timeSec);
-    setApiError(null);
-  }, []);
-
-  // --- Countdown Timer ---
+  // Countdown Timer
   useEffect(() => {
     if (gameStatus !== "PLAYING") return;
     if (remainingTime <= 0) {
@@ -143,7 +112,7 @@ const Page = () => {
     return () => clearTimeout(timer);
   }, [remainingTime, gameStatus]);
 
-  // --- Handle Peg Click ---
+  // Peg click handler
   const handlePegClick = useCallback(
     (pegIndex) => {
       if (gameStatus !== "PLAYING" || isAutoSolving) return;
@@ -151,14 +120,14 @@ const Page = () => {
         if (pegs[pegIndex]?.length > 0) setSelectedPeg(pegIndex);
         return;
       }
-      const sourceIndex = selectedPeg;
-      const destIndex = pegIndex;
+      const source = selectedPeg;
+      const dest = pegIndex;
       setSelectedPeg(null);
-      if (sourceIndex === destIndex) return;
-      if (isMoveValid(pegs, sourceIndex, destIndex)) {
+      if (source === dest) return;
+      if (isMoveValid(pegs, source, dest)) {
         setPegs((prev) => {
           const newPegs = prev.map((p) => [...p]);
-          newPegs[destIndex].push(newPegs[sourceIndex].pop());
+          newPegs[dest].push(newPegs[source].pop());
           return newPegs;
         });
         setMoveCount((c) => c + 1);
@@ -166,31 +135,39 @@ const Page = () => {
     },
     [pegs, selectedPeg, gameStatus, isAutoSolving]
   );
-
-  // --- Auto-Solve Generation ---
+  const [timeRecursive, setTimeRecursive] = useState(0);
+  const [timeThreaded, setTimeThreaded] = useState(0);
+  // Auto-solve generator
   const generateSolution = useCallback(() => {
     if (N === 0 || gameStatus !== "PLAYING") return;
 
     const moves = [];
-    // Reset pegs and move count before auto-solving
     setPegs(initializePegs(N, P));
     setMoveCount(0);
     setCurrentMoveIndex(0);
 
-    if (P === 3) {
-      // 3 Pegs Optimal
-      solveHanoi3PegsRecursive(N, 0, P - 1, 1, moves);
-    } else if (P === 4) {
-      // 4 Pegs Frame-Stewart Optimal
-      solveHanoi4PegsFrameStewart(N, 0, P - 1, [1, 2], moves);
-    }
+    if (P === 3) solveHanoi3PegsRecursive(N, 0, P - 1, 1, moves);
+    else solveHanoi4PegsFrameStewart(N, 0, P - 1, [1, 2], moves);
 
     setSolutionMoves(moves);
     setIsAutoSolving(true);
     setGameStatus("SOLVING");
   }, [N, P, gameStatus]);
 
-  // --- Auto-Solve Moves ---
+  const handleSetupGame = (n, p, timeLimit) => {
+    setN(n);
+    setP(p);
+    setPegs(initializePegs(n, p));
+    setMoveCount(0);
+    setCurrentMoveIndex(0);
+    setRemainingTime(timeLimit);
+    setGameStatus("PLAYING");
+    setIsAutoSolving(false);
+    setSolutionMoves([]);
+    setStartTime(Date.now());
+  };
+
+  // Auto-solve moves effect
   useEffect(() => {
     if (!isAutoSolving || currentMoveIndex >= solutionMoves.length) {
       if (isAutoSolving) setGameStatus("WON");
@@ -200,28 +177,24 @@ const Page = () => {
 
     const timer = setTimeout(() => {
       const { from, to } = solutionMoves[currentMoveIndex];
-
       setPegs((prev) => {
         const newPegs = prev.map((p) => [...p]);
         newPegs[to].push(newPegs[from].pop());
         return newPegs;
       });
-
       setMoveCount((c) => c + 1);
       setCurrentMoveIndex((c) => c + 1);
-    }, 200); // Adjust speed here (ms)
+    }, 200);
 
     return () => clearTimeout(timer);
   }, [isAutoSolving, currentMoveIndex, solutionMoves]);
 
-  // --- Post Score & Generate Optimal Solution on Manual Win ---
+  // Post score & handle win
   useEffect(() => {
     if (!isGameWon) return;
 
-    if (gameStatus !== "WON" && gameStatus !== "SHOW_DESCRIPTION")
-      setGameStatus("WON");
+    if (gameStatus !== "WON") setGameStatus("WON");
 
-    // Generate optimal moves if not generated yet
     if (solutionMoves.length === 0) {
       const moves = [];
       if (P === 3) solveHanoi3PegsRecursive(N, 0, P - 1, 1, moves);
@@ -246,7 +219,7 @@ const Page = () => {
         setIsLoading(true);
         await postScore(scoreData);
         await loadLeaderboardData();
-      } catch (error) {
+      } catch {
         setApiError("Failed to update leaderboard.");
       } finally {
         setIsLoading(false);
@@ -254,11 +227,11 @@ const Page = () => {
     })();
   }, [isGameWon]);
 
-  // --- Reset Game ---
+  // Reset Game
   const resetGame = useCallback(() => {
     setGameStatus("SETUP");
     setPegs([]);
-    setN(RANDOM_DISKS);
+    setN(DEFAULT_RANDOM_DISKS);
     setSelectedPeg(null);
     setMoveCount(0);
     setSolutionMoves([]);
@@ -354,7 +327,7 @@ const Page = () => {
               N={N}
               setN={setN}
               gameStatus={gameStatus}
-              handleSetupGame={(n, p) => handleSetupGame(n, p, timeLimit)}
+              handleSetupGame={handleSetupGame} 
               selectedAlgorithm3P={selectedAlgorithm3P}
               setSelectedAlgorithm3P={setSelectedAlgorithm3P}
               selectedAlgorithm4P={selectedAlgorithm4P}

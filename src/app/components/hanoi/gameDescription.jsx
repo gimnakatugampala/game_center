@@ -227,43 +227,6 @@ const GameDescription = ({
           </div>
         </div>
 
-        {/* Algorithm Execution Time */}
-        <div className="p-6 bg-gradient-to-br from-gray-800/60 to-gray-900/60 rounded-2xl shadow-lg hover:scale-105 hover:shadow-purple-500/50 transition-transform duration-300">
-          <h3 className="text-xl font-semibold text-indigo-300 mb-3">
-            Algorithm Execution Time
-          </h3>
-
-          <div className="space-y-2 text-gray-300">
-            {timeRecursive !== undefined && (
-              <p>
-                <span className="font-semibold text-yellow-300">
-                  Recursive Solver:
-                </span>{" "}
-                <span className="text-green-400 font-bold">
-                  {timeRecursive} ms
-                </span>
-              </p>
-            )}
-
-            {timeThreaded !== undefined && (
-              <p>
-                <span className="font-semibold text-yellow-300">
-                  Threaded / 4-Peg Solver:
-                </span>{" "}
-                <span className="text-green-400 font-bold">
-                  {timeThreaded} ms
-                </span>
-              </p>
-            )}
-
-            {timeRecursive === undefined && timeThreaded === undefined && (
-              <p className="text-gray-500 italic">
-                Run the game to view execution times.
-              </p>
-            )}
-          </div>
-        </div>
-
         {/* Move Breakdown */}
         <div className="p-6 bg-gradient-to-br from-gray-800/60 to-gray-900/60 rounded-2xl shadow-lg hover:scale-105 hover:shadow-purple-500/50 transition-transform duration-300">
           <div
