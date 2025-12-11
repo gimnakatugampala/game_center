@@ -10,19 +10,19 @@ const customJestConfig = {
 
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
 
-  // Allow ESM and JSX
-  transform: {
-    "^.+\\.(js|jsx|ts|tsx)$": "babel-jest",
-  },
+  testMatch: [
+    "<rootDir>/src/**/__tests__/**/*.[jt]s?(x)",
+    "<rootDir>/src/**/?(*.)+(spec|test).[tj]s?(x)",
+  ],
+
+  roots: ["<rootDir>/src"],
+
 
   moduleNameMapper: {
-    "^@/(.*)$": "<rootDir>/$1",
+    "^@/(.*)$": "<rootDir>/src/$1",
     "\\.(css|less|sass|scss)$": "identity-obj-proxy",
   },
 
-  transformIgnorePatterns: [
-    "/node_modules/(?!(uuid|nanoid)/)", // allow ESM node_modules if needed
-  ],
 };
 
 module.exports = createJestConfig(customJestConfig);
