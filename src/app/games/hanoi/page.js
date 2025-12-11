@@ -41,6 +41,9 @@ const Page = () => {
     ALGORITHM_OPTIONS_4P.FRAME_STEWART
   );
 
+  const [error, setError] = useState("");
+  const [gameState, setGameState] = useState("welcome");
+
   // --- Auto-Solve / Optimal Solution ---
   const [solutionMoves, setSolutionMoves] = useState([]);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
@@ -64,6 +67,27 @@ const Page = () => {
     () => pegs[P - 1]?.length === N && N > 0,
     [pegs, N, P]
   );
+
+  const handlePlayerNameSubmit = () => {
+    if (!playerName.trim()) {
+      setError("Please enter your name to start the game");
+      return;
+    }
+
+    if (playerName.trim().length < 2) {
+      setError("Name must be at least 2 characters");
+      return;
+    }
+
+    // Clear any errors
+    setError("");
+
+    // Move to setup or directly start game (your choice)
+    setGameState("setup");
+
+    // OR if you want to instantly start:
+    // startGame();
+  };
 
   // --- Load Leaderboard ---
   const loadLeaderboardData = useCallback(async () => {
@@ -258,156 +282,219 @@ const Page = () => {
           leaderboard.
         </p>
       </header>
-
-      {/* Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-        <SetupPanel
-          playerName={playerName}
-          setPlayerName={setPlayerName}
-          P={P}
-          setP={setP}
-          N={N}
-          setN={setN}
-          gameStatus={gameStatus}
-          handleSetupGame={(n, p) => handleSetupGame(n, p, timeLimit)}
-          selectedAlgorithm3P={selectedAlgorithm3P}
-          setSelectedAlgorithm3P={setSelectedAlgorithm3P}
-          selectedAlgorithm4P={selectedAlgorithm4P}
-          setSelectedAlgorithm4P={setSelectedAlgorithm4P}
-          timeLimit={timeLimit}
-          setTimeLimit={setTimeLimit}
-        />
-
-        {/* Game Display */}
-        <div className="p-6 bg-gray-900 rounded-3xl shadow-2xl border border-gray-800 w-full max-w-lg mx-auto space-y-6">
-          {gameStatus === "PLAYING" && (
-            <div className="text-lg font-semibold text-yellow-400 animate-pulse">
-              Time Remaining: {Math.floor(remainingTime / 60)}:
-              {String(remainingTime % 60).padStart(2, "0")}
-            </div>
-          )}
-
-          <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500 text-center mb-8">
-            {gameStatus === "SETUP"
-              ? "Ready to Start"
-              : `Game: ${N} Disks, ${P} Pegs`}
-          </h2>
-
-          {N > 0 && pegs.length > 0 && (
-            <PegsDisplay
-              pegs={pegs}
-              P={P}
-              N={N}
-              gameStatus={gameStatus}
-              selectedPeg={selectedPeg}
-              handlePegClick={handlePegClick}
-              isAutoSolving={isAutoSolving}
-            />
-          )}
-
-          {["PLAYING", "SOLVING", "WON"].includes(gameStatus) && (
-            <StatusAndSolver
-              N={N}
-              P={P}
-              moveCount={moveCount}
-              optimalMoves={optimalMoves}
-              gameStatus={gameStatus}
-              currentMoveIndex={currentMoveIndex}
-              solutionMoves={solutionMoves}
-              generateSolution={generateSolution}
-              isAutoSolving={isAutoSolving}
-            />
-          )}
-        </div>
-
-        {/* Leaderboard */}
-        <Leaderboard
-          leaderboard={leaderboard}
-          isLoading={isLoading}
-          apiError={apiError}
-        />
-      </div>
-
-      {/* Overlay on Game End */}
-      {(gameStatus === "WON" || gameStatus === "GAMEOVER") &&
-        gameStatus !== "SHOW_DESCRIPTION" && (
-          <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900 p-10 rounded-3xl shadow-2xl text-center max-w-lg w-full animate-fadeIn space-y-6">
-              <h3 className="text-4xl font-extrabold mb-2 text-indigo-400">
-                {gameStatus === "WON"
-                  ? isAutoSolving
-                    ? "Solved by Algorithm!"
-                    : "🎉 You Solved It!"
-                  : "⏱ Time's Up! Game Over"}
-              </h3>
-
-              {gameStatus === "WON" && (
-                <p className="text-xl text-gray-100">
-                  Total Moves:{" "}
-                  <span
-                    className={`font-bold ${
-                      moveCount === optimalMoves
-                        ? "text-green-400"
-                        : "text-red-400"
-                    }`}
-                  >
-                    {moveCount}
-                  </span>{" "}
-                  (Optimal:{" "}
-                  <span className="font-bold text-green-400">
-                    {optimalMoves}
-                  </span>
-                  )
-                </p>
-              )}
-
-              <div className="flex flex-col md:flex-row gap-4 justify-center mt-4">
-                {gameStatus === "WON" && solutionMoves.length > 0 && (
-                  <button
-                    onClick={() => setGameStatus("SHOW_DESCRIPTION")}
-                    className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-2xl transition duration-150 shadow-lg hover:scale-[1.02]"
-                  >
-                    Show Description
-                  </button>
-                )}
-                <button
-                  onClick={resetGame}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl transition duration-150 shadow-lg hover:scale-[1.02]"
-                >
-                  Play Again
-                </button>
+      {gameState === "welcome" && (
+        <div className="flex justify-center items-center min-h-[70vh] px-5 py-10">
+          <div className="bg-slate-800/90 backdrop-blur-xl rounded-[30px] p-12 max-w-2xl w-full shadow-[0_30px_80px_rgba(0,0,0,0.6)] border-2 border-pink-500/30 text-center animate-fadeInUp">
+            {/* Tower of Hanoi Image */}
+            <div className="flex justify-center mb-6">
+              <div className="text-[120px] leading-none drop-shadow-[0_0_40px_rgba(236,72,153,0.6)] animate-bounce">
+                🗼
               </div>
             </div>
-          </div>
-        )}
 
-      {/* Show Description Modal */}
-      {gameStatus === "SHOW_DESCRIPTION" && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex flex-col items-center justify-start z-50 p-4 overflow-y-auto">
-          <div className="bg-gray-900 p-6 rounded-3xl shadow-2xl text-center max-w-3xl w-full mt-16 space-y-4">
-            <h3 className="text-3xl font-extrabold text-indigo-400 mb-4">
-              Optimal Solution Steps
-            </h3>
+            <h2 className="text-4xl font-bold mb-5 bg-gradient-to-r from-pink-400 to-purple-600 bg-clip-text text-transparent">
+              Tower of Hanoi Explorer
+            </h2>
 
-            <MovesCard moves={solutionMoves} />
+            <p className="text-lg text-slate-300 leading-relaxed mb-10">
+              Challenge yourself with multiple pegs, custom solvers, and a live
+              leaderboard. Test your strategy while racing against sequential
+              and threaded solver algorithms!
+            </p>
 
-            <div className="flex justify-center gap-4 mt-4">
-              <button
-                onClick={() => setGameStatus("WON")}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl transition duration-150 shadow-lg hover:scale-[1.02]"
-              >
-                Close Description
-              </button>
+            {/* Player Name Input */}
+            <div className="my-8">
+              <label className="block text-xl font-semibold text-slate-200 mb-4">
+                Enter Your Name
+              </label>
 
-              <button
-                onClick={resetGame}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl transition duration-150 shadow-lg hover:scale-[1.02]"
-              >
-                Play Again
-              </button>
+              <input
+                id="playerNameInput"
+                type="text"
+                value={playerName}
+                onChange={(e) => {
+                  setPlayerName(e.target.value);
+                  setError("");
+                }}
+                placeholder="Your name..."
+                className="w-full px-6 py-4 border-3 border-pink-500/40 rounded-2xl bg-black/50 text-white text-xl text-center transition-all duration-300 focus:outline-none focus:border-pink-500 focus:shadow-[0_0_30px_rgba(236,72,153,0.5)] focus:bg-black/70 focus:scale-[1.02] placeholder:text-slate-500"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handlePlayerNameSubmit();
+                }}
+                autoFocus
+              />
             </div>
+
+            {error && (
+              <div className="bg-red-500/20 border-2 border-red-500/50 rounded-xl px-4 py-3 my-4 text-red-300 font-semibold animate-shake">
+                {error}
+              </div>
+            )}
+
+            <button
+              onClick={handlePlayerNameSubmit}
+              className="w-full px-8 py-4 border-none rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xl font-bold cursor-pointer transition-all duration-300 shadow-[0_15px_40px_rgba(236,72,153,0.5)] hover:translate-y-[-3px] hover:shadow-[0_20px_50px_rgba(236,72,153,0.7)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none mt-6"
+              disabled={!playerName.trim() || isLoading}
+            >
+              {isLoading ? "⏳ Preparing Puzzle..." : "Start Challenge →"}
+            </button>
           </div>
         </div>
+      )}
+
+      {gameState !== "welcome" && (
+        <>
+          {/* Grid Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+            <SetupPanel
+              playerName={playerName}
+              setPlayerName={setPlayerName}
+              P={P}
+              setP={setP}
+              N={N}
+              setN={setN}
+              gameStatus={gameStatus}
+              handleSetupGame={(n, p) => handleSetupGame(n, p, timeLimit)}
+              selectedAlgorithm3P={selectedAlgorithm3P}
+              setSelectedAlgorithm3P={setSelectedAlgorithm3P}
+              selectedAlgorithm4P={selectedAlgorithm4P}
+              setSelectedAlgorithm4P={setSelectedAlgorithm4P}
+              timeLimit={timeLimit}
+              setTimeLimit={setTimeLimit}
+            />
+
+            {/* Game Display */}
+            <div className="p-6 bg-gray-900 rounded-3xl shadow-2xl border border-gray-800 w-full max-w-lg mx-auto space-y-6">
+              {gameStatus === "PLAYING" && (
+                <div className="text-lg font-semibold text-yellow-400 animate-pulse">
+                  Time Remaining: {Math.floor(remainingTime / 60)}:
+                  {String(remainingTime % 60).padStart(2, "0")}
+                </div>
+              )}
+
+              <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500 text-center mb-8">
+                {gameStatus === "SETUP"
+                  ? "Ready to Start"
+                  : `Game: ${N} Disks, ${P} Pegs`}
+              </h2>
+
+              {N > 0 && pegs.length > 0 && (
+                <PegsDisplay
+                  pegs={pegs}
+                  P={P}
+                  N={N}
+                  gameStatus={gameStatus}
+                  selectedPeg={selectedPeg}
+                  handlePegClick={handlePegClick}
+                  isAutoSolving={isAutoSolving}
+                />
+              )}
+
+              {["PLAYING", "SOLVING", "WON"].includes(gameStatus) && (
+                <StatusAndSolver
+                  N={N}
+                  P={P}
+                  moveCount={moveCount}
+                  optimalMoves={optimalMoves}
+                  gameStatus={gameStatus}
+                  currentMoveIndex={currentMoveIndex}
+                  solutionMoves={solutionMoves}
+                  generateSolution={generateSolution}
+                  isAutoSolving={isAutoSolving}
+                />
+              )}
+            </div>
+
+            {/* Leaderboard */}
+            <Leaderboard
+              leaderboard={leaderboard}
+              isLoading={isLoading}
+              apiError={apiError}
+            />
+          </div>
+
+          {/* Overlay on Game End */}
+          {(gameStatus === "WON" || gameStatus === "GAMEOVER") &&
+            gameStatus !== "SHOW_DESCRIPTION" && (
+              <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
+                <div className="bg-gray-900 p-10 rounded-3xl shadow-2xl text-center max-w-lg w-full animate-fadeIn space-y-6">
+                  <h3 className="text-4xl font-extrabold mb-2 text-indigo-400">
+                    {gameStatus === "WON"
+                      ? isAutoSolving
+                        ? "Solved by Algorithm!"
+                        : "🎉 You Solved It!"
+                      : "⏱ Time's Up! Game Over"}
+                  </h3>
+
+                  {gameStatus === "WON" && (
+                    <p className="text-xl text-gray-100">
+                      Total Moves:{" "}
+                      <span
+                        className={`font-bold ${
+                          moveCount === optimalMoves
+                            ? "text-green-400"
+                            : "text-red-400"
+                        }`}
+                      >
+                        {moveCount}
+                      </span>{" "}
+                      (Optimal:{" "}
+                      <span className="font-bold text-green-400">
+                        {optimalMoves}
+                      </span>
+                      )
+                    </p>
+                  )}
+
+                  <div className="flex flex-col md:flex-row gap-4 justify-center mt-4">
+                    {gameStatus === "WON" && solutionMoves.length > 0 && (
+                      <button
+                        onClick={() => setGameStatus("SHOW_DESCRIPTION")}
+                        className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-2xl transition duration-150 shadow-lg hover:scale-[1.02]"
+                      >
+                        Show Description
+                      </button>
+                    )}
+                    <button
+                      onClick={resetGame}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl transition duration-150 shadow-lg hover:scale-[1.02]"
+                    >
+                      Play Again
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+          {/* Show Description Modal */}
+          {gameStatus === "SHOW_DESCRIPTION" && (
+            <div className="fixed inset-0 bg-black bg-opacity-70 flex flex-col items-center justify-start z-50 p-4 overflow-y-auto">
+              <div className="bg-gray-900 p-6 rounded-3xl shadow-2xl text-center max-w-3xl w-full mt-16 space-y-4">
+                <h3 className="text-3xl font-extrabold text-indigo-400 mb-4">
+                  Optimal Solution Steps
+                </h3>
+
+                <MovesCard moves={solutionMoves} />
+
+                <div className="flex justify-center gap-4 mt-4">
+                  <button
+                    onClick={() => setGameStatus("WON")}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl transition duration-150 shadow-lg hover:scale-[1.02]"
+                  >
+                    Close Description
+                  </button>
+
+                  <button
+                    onClick={resetGame}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl transition duration-150 shadow-lg hover:scale-[1.02]"
+                  >
+                    Play Again
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
