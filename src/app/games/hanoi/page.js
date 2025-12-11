@@ -13,7 +13,7 @@ import {
   minMoves3Pegs,
   minMoves4Pegs,
   solveHanoi3PegsRecursive,
-  solveHanoi4PFrameStewart,
+  solveHanoi4PegsFrameStewart,
   fetchLeaderboard,
   postScore,
   RANDOM_DISKS,
@@ -158,7 +158,7 @@ const Page = () => {
       solveHanoi3PegsRecursive(N, 0, P - 1, 1, moves);
     } else if (P === 4) {
       // 4 Pegs Frame-Stewart Optimal
-      solveHanoi4PFrameStewart(N, 0, P - 1, [1, 2], moves);
+      solveHanoi4PegsFrameStewart(N, 0, P - 1, [1, 2], moves);
     }
 
     setSolutionMoves(moves);
