@@ -1,5 +1,5 @@
 // pages/api/game/save-result.js
-import { query } from '../../../lib/db'; // අපි 1වෙනි පියවරේ හදපු db helper එක
+import { query } from '../../../../lib/db'; // අපි 1වෙනි පියවරේ හදපු db helper එක
 
 export default async function handler(req, res) {
   // POST request විතරයි

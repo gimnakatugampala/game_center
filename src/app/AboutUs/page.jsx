@@ -7,7 +7,7 @@ const AboutUs = () => {
     { name: "Gimna Kavishka", index: "COBSCCOMP251P-XXX" },
     { name: "Nuwan Jeewantha", index: "COBSCCOMP251P-045" },
     { name: "Nandana", index: "COBSCCOMP251P-XXX" },
-    { name: "Dilmani", index: "COBSCCOMP251P-XXX" },
+    { name: "Dilmani", index: "COBSCCOMP251P-X63" },
   ];
 
   return (

@@ -10,12 +10,12 @@ const GameCenterDashboard = () => {
       title: "Snake and Ladder",
       icon: "🎲",
       description:
-        "Find the minimum dice throws using BFS and Dynamic Programming",
+        "Find the minimum dice throws using BFS and Dijkstra Algorithms",
       color: "from-red-500 to-orange-500",
       complexity: "Graph Traversal",
-      algorithms: ["BFS", "Dynamic Programming"],
+      algorithms: ["BFS", "Dijkstra"],
       route: "/games/snake-ladder",
-      implemented: false,
+      implemented: true,
     },
     {
       id: 'traffic',
@@ -85,7 +85,7 @@ const GameCenterDashboard = () => {
         </p>
 
         {/* Stats Bar */}
-        <div className="flex justify-center gap-8 mt-8 flex-wrap">
+        {/* <div className="flex justify-center gap-8 mt-8 flex-wrap">
           <div className="bg-slate-800/50 backdrop-blur-md px-6 py-3 rounded-full border border-indigo-500/30">
             <span className="text-slate-400 text-sm">Total Games:</span>
             <span className="text-white font-bold text-lg ml-2">5</span>
@@ -98,7 +98,7 @@ const GameCenterDashboard = () => {
             <span className="text-slate-400 text-sm">Coming Soon:</span>
             <span className="text-yellow-400 font-bold text-lg ml-2">2</span>
           </div>
-        </div>
+        </div> */}
       </header>
 
       {/* Games Grid */}
@@ -215,7 +215,7 @@ const GameCenterDashboard = () => {
       </div>
 
       {/* Features Section */}
-      <div className="max-w-5xl mx-auto bg-slate-800/40 backdrop-blur-md rounded-3xl p-8 mb-12 border border-slate-700/30">
+      {/* <div className="max-w-5xl mx-auto bg-slate-800/40 backdrop-blur-md rounded-3xl p-8 mb-12 border border-slate-700/30">
         <h3 className="text-3xl font-bold text-white text-center mb-8">
           🌟 Features
         </h3>
@@ -243,7 +243,7 @@ const GameCenterDashboard = () => {
             </p>
           </div>
         </div>
-      </div>
+      </div> */}
 
       <style jsx>{`
         @keyframes fadeInUp {
