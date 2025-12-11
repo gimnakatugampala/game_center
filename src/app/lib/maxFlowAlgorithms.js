@@ -27,11 +27,16 @@ export function createGraphFromCapacities(capacities) {
 
   for (const [edge, capacity] of Object.entries(capacities)) {
     const [from, to] = edge.split('->');
-    
+
     if (!graph[from]) {
       graph[from] = {};
     }
     graph[from][to] = capacity;
+
+    // Ensure destination node exists in graph (even if it has no outgoing edges)
+    if (!graph[to]) {
+      graph[to] = {};
+    }
   }
 
   return graph;
@@ -39,6 +44,17 @@ export function createGraphFromCapacities(capacities) {
 
 // Ford-Fulkerson algorithm (DFS-based)
 export function fordFulkerson(graph, source, sink) {
+  if (!graph || typeof graph !== 'object') {
+    throw new Error('Invalid graph');
+  }
+  if (typeof source !== 'string' || typeof sink !== 'string') {
+    throw new Error('Invalid source or sink');
+  }
+  // If source/sink not present as keys, algorithm can't proceed
+  if (!Object.prototype.hasOwnProperty.call(graph, source) ||
+      !Object.prototype.hasOwnProperty.call(graph, sink)) {
+    throw new Error('Graph must contain source and sink nodes');
+  }
   const startTime = performance.now();
   
   // Create residual graph
