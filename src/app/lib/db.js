@@ -5,16 +5,29 @@ import dotenv from "dotenv";
 dotenv.config();
 
 // --- Create a connection pool ---
+// Local
 const pool = mysql.createPool({
   host: process.env.DB_HOST || "localhost",
   user: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD || "",
-  database: process.env.DB_NAME || "hanoi_game",
+  database: process.env.DB_NAME || "game_center",
   port: Number(process.env.DB_PORT) || 3306,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
 });
+
+// Pro
+// const pool = mysql.createPool({
+//   host: process.env.DB_HOST || "localhost",
+//   user: process.env.DB_USER || "autovnph_root",
+//   password: process.env.DB_PASSWORD || "FS8qiqfeIkwQ",
+//   database: process.env.DB_NAME || "autovnph_game_center",
+//   port: Number(process.env.DB_PORT) || 3306,
+//   waitForConnections: true,
+//   connectionLimit: 10,
+//   queueLimit: 0,
+// });
 
 // --- Execute a query with parameters (INSERT, UPDATE, DELETE) ---
 async function execute(query, params = []) {
