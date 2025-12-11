@@ -1,7 +1,9 @@
 // pages/snake-ladder.js
-import React from "react";
-import styles from "../styles/SnakeLadder.module.css"; // අපි මේ CSS file එක ඊළඟට හදමු
-import GameBoard from "../components/GameBoard";
+'use client';
+
+import React , { Component }  from "react";
+import styles from "../../../../styles/SnakeLadder.module.css"; // අපි මේ CSS file එක ඊළඟට හදමු
+import GameBoard from "../../components/snake-ladder/GameBoard";
 
 // Helper function: Array එකක් shuffle කරන්න (Choices 3 randomize කරන්න)
 function shuffleArray(array) {
@@ -13,7 +15,7 @@ function shuffleArray(array) {
 }
 
 // අපේ Class Component එක
-class SnakeLadderGame extends React.Component {
+class SnakeLadderGame extends Component {
   // 1. Constructor: Component එක පටන් ගනිද්දී State එක හදාගැනීම
   constructor(props) {
     super(props);
