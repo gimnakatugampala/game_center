@@ -84,7 +84,7 @@ const GameCenterDashboard = () => {
         </p>
         
         {/* Stats Bar */}
-        <div className="flex justify-center gap-8 mt-8 flex-wrap">
+        {/* <div className="flex justify-center gap-8 mt-8 flex-wrap">
           <div className="bg-slate-800/50 backdrop-blur-md px-6 py-3 rounded-full border border-indigo-500/30">
             <span className="text-slate-400 text-sm">Total Games:</span>
             <span className="text-white font-bold text-lg ml-2">5</span>
@@ -97,7 +97,7 @@ const GameCenterDashboard = () => {
             <span className="text-slate-400 text-sm">Coming Soon:</span>
             <span className="text-yellow-400 font-bold text-lg ml-2">3</span>
           </div>
-        </div>
+        </div> */}
       </header>
 
       {/* Games Grid */}
