@@ -1,6 +1,6 @@
 // components/GameBoard.js
 import React from 'react';
-import styles from '../styles/GameBoard.module.css';
+import styles from '../../../../styles/GameBoard.module.css';
 
 // N x N පුවරුව පෙන්වන Functional Component එක
 function GameBoard({ size, moves }) {

@@ -10,7 +10,10 @@ export default function Header() {
       <nav className="container mx-auto flex justify-between items-center py-4 px-6 md:px-10">
         {/* Logo */}
         <div className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-500 to-pink-500 tracking-wide">
+          <a href="/">
+
           Game Center
+          </a>
         </div>
 
         {/* Desktop Menu */}
