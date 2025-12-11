@@ -42,5 +42,17 @@
       "**/__tests__/**/*.test.js",
       "**/?(*.)+(spec|test).js"
     ]
-  }
+  },
+  "description": "This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).",
+  "main": "jest.setup.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gimnakatugampala/game_center.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gimnakatugampala/game_center/issues"
+  },
+  "homepage": "https://github.com/gimnakatugampala/game_center#readme"
 }
