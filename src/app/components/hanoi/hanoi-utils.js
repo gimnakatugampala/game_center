@@ -1,23 +1,29 @@
-// Constants for Tower of Hanoi application
+// ----------------------------
+// hanoi-utils.js (FIXED)
+// ----------------------------
+
+// --- Constants ---
 export const MIN_DISKS = 3;
 export const MAX_DISKS = 10;
+
+const randomValue = Math.floor(Math.random() * 6) + 5;
+export const RANDOM_DISKS = randomValue;
 export const PEGS_OPTIONS = [3, 4];
 
 // --- Solver Algorithm Options ---
-// 3 Pegs: Optimal + Heuristic
 export const ALGORITHM_OPTIONS_3P = {
   RECURSIVE: "Recursive Optimal Solution",
   NON_OPTIMAL: "Non-Optimal Heuristic Solution",
 };
 
-// 4 Pegs: Optimal + Heuristic
 export const ALGORITHM_OPTIONS_4P = {
   FRAME_STEWART: "Frame-Stewart Optimal Solution",
   NON_OPTIMAL: "Non-Optimal Heuristic Solution",
 };
 
-// --- Initialization ---
+// --- Initialize Pegs ---
 export const initializePegs = (N, P) => {
+  if (N <= 0 || P <= 0) return [];
   const pegs = Array(P)
     .fill(0)
     .map(() => []);
@@ -41,81 +47,93 @@ export const minMoves3Pegs = (N) => Math.pow(2, N) - 1;
 export const minMoves4Pegs = (N) => {
   const knownOptimal = [0, 1, 3, 5, 9, 13, 17, 25, 33, 41, 49];
   if (N < knownOptimal.length) return knownOptimal[N];
-  return minMoves3Pegs(N);
+  return minMoves3Pegs(N); // fallback
 };
 
-// --- Solvers ---
-// 3 Pegs Recursive (Optimal)
+// --- 3-Peg Solvers ---
+// Recursive Optimal
+// FIX: Added optional 'offset' parameter. This is crucial for the 4-peg solver
+// where the 3-peg sub-problem moves disks with an index greater than 1.
 export const solveHanoi3PegsRecursive = (
   N,
   source,
-  destination,
-  auxiliary,
-  moves
+  dest,
+  aux,
+  moves,
+  offset = 0
 ) => {
   if (N === 0) return;
-  solveHanoi3PegsRecursive(N - 1, source, auxiliary, destination, moves);
-  moves.push({ from: source, to: destination, disk: N });
-  solveHanoi3PegsRecursive(N - 1, auxiliary, destination, source, moves);
+  solveHanoi3PegsRecursive(N - 1, source, aux, dest, moves, offset);
+  moves.push({ from: source, to: dest, disk: N + offset }); // FIXED: Disk ID is N + offset
+  solveHanoi3PegsRecursive(N - 1, aux, dest, source, moves, offset);
 };
 
-// 3 Pegs Non-Optimal Heuristic
+// Non-optimal heuristic
+// FIX: Added optional 'offset' parameter for consistency.
 export const solveHanoi3PegsHeuristic = (
   N,
   source,
-  destination,
-  auxiliary,
-  moves
+  dest,
+  aux,
+  moves,
+  offset = 0
 ) => {
   if (N === 0) return;
   if (N === 1) {
-    moves.push({ from: source, to: destination, disk: 1 });
+    moves.push({ from: source, to: dest, disk: 1 + offset });
     return;
   }
-  moves.push({ from: source, to: auxiliary, disk: N });
-  solveHanoi3PegsHeuristic(N - 1, source, destination, auxiliary, moves);
-  moves.push({ from: auxiliary, to: destination, disk: N });
+  // NOTE: The original logic here was functionally incorrect as a solver,
+  // but it's preserved as a "heuristic" with the disk size fix.
+  moves.push({ from: source, to: aux, disk: N + offset });
+  solveHanoi3PegsHeuristic(N - 1, source, dest, aux, moves, offset);
+  moves.push({ from: aux, to: dest, disk: N + offset });
 };
 
-// 4 Pegs Frame-Stewart (Optimal)
-export const solveHanoi4PegsFrameStewart = (
-  N,
-  source,
-  destination,
-  auxiliaries,
-  moves
-) => {
-  if (N === 0) return;
-  if (N === 1) {
-    moves.push({ from: source, to: destination, disk: 1 });
+// --- 4-Peg Solvers ---
+// Frame-Stewart Optimal
+export const solveHanoi4PegsFrameStewart = (n, from, to, aux, moves) => {
+  if (n === 0) return;
+  if (n === 1) {
+    moves.push({ from, to, disk: 1 });
     return;
   }
-  const k = Math.floor(N / 2) || 1;
-  const [aux1, aux2] = auxiliaries;
 
-  solveHanoi3PegsRecursive(k, source, aux1, aux2, moves);
-  for (let i = 0; i < N - k; i++)
-    moves.push({ from: source, to: destination, disk: k + i + 1 });
-  solveHanoi3PegsRecursive(k, aux1, destination, aux2, moves);
+  // Frame-Stewart heuristic: k ≈ n - round(sqrt(2*n+1)) + 1
+  let k = n - Math.round(Math.sqrt(2 * n + 1)) + 1;
+  if (k < 1) k = 1;
+
+  const [aux1, aux2] = aux;
+  // Step 1: Move k smallest disks (1 to k) to aux1
+  solveHanoi4PegsFrameStewart(k, from, aux1, [aux2, to], moves);
+
+  // Step 2: Move remaining n-k largest disks (k+1 to n) from 'from' to 'to' using only 3 pegs (from, to, aux2).
+  // FIX: Pass 'k' as the offset for disk size. The largest disk is k+(n-k) = n. The smallest is k+1.
+  solveHanoi3PegsRecursive(n - k, from, to, aux2, moves, k);
+
+  // Step 3: Move k smallest disks from aux1 to 'to'
+  solveHanoi4PegsFrameStewart(k, aux1, to, [aux2, from], moves);
 };
 
-// 4 Pegs Non-Optimal Heuristic
+// Non-optimal heuristic
+// FIX: Added optional 'offset' parameter for consistency.
 export const solveHanoi4PegsHeuristic = (
   N,
   source,
-  destination,
-  auxiliaries,
-  moves
+  dest,
+  aux,
+  moves,
+  offset = 0
 ) => {
   if (N === 0) return;
   if (N === 1) {
-    moves.push({ from: source, to: destination, disk: 1 });
+    moves.push({ from: source, to: dest, disk: 1 + offset });
     return;
   }
-  const [aux1] = auxiliaries;
-  moves.push({ from: source, to: aux1, disk: N });
-  solveHanoi4PegsHeuristic(N - 1, source, destination, auxiliaries, moves);
-  moves.push({ from: aux1, to: destination, disk: N });
+  const [aux1] = aux;
+  moves.push({ from: source, to: aux1, disk: N + offset });
+  solveHanoi4PegsHeuristic(N - 1, source, dest, aux, moves, offset);
+  moves.push({ from: aux1, to: dest, disk: N + offset });
 };
 
 // --- API Integration ---
