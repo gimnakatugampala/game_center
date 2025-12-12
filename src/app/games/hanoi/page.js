@@ -13,7 +13,9 @@ import {
   minMoves3Pegs,
   minMoves4Pegs,
   solveHanoi3PegsRecursive,
+  solveHanoi3PegsHeuristic,
   solveHanoi4PegsFrameStewart,
+  solveHanoi4PegsHeuristic,
   fetchLeaderboard,
   postScore,
   ALGORITHM_OPTIONS_3P,
@@ -135,8 +137,8 @@ const Page = () => {
     },
     [pegs, selectedPeg, gameStatus, isAutoSolving]
   );
-  const [timeRecursive, setTimeRecursive] = useState(0);
-  const [timeThreaded, setTimeThreaded] = useState(0);
+  // const [timeRecursive, setTimeRecursive] = useState(0);
+  // const [timeThreaded, setTimeThreaded] = useState(0);
   // Auto-solve generator
   const generateSolution = useCallback(() => {
     if (N === 0 || gameStatus !== "PLAYING") return;
@@ -146,13 +148,24 @@ const Page = () => {
     setMoveCount(0);
     setCurrentMoveIndex(0);
 
-    if (P === 3) solveHanoi3PegsRecursive(N, 0, P - 1, 1, moves);
-    else solveHanoi4PegsFrameStewart(N, 0, P - 1, [1, 2], moves);
+    if (P === 3) {
+      if (selectedAlgorithm3P === ALGORITHM_OPTIONS_3P.RECURSIVE) {
+        solveHanoi3PegsRecursive(N, 0, P - 1, 1, moves);
+      } else {
+        solveHanoi3PegsHeuristic(N, 0, P - 1, 1, moves);
+      }
+    } else {
+      if (selectedAlgorithm4P === ALGORITHM_OPTIONS_4P.FRAME_STEWART) {
+        solveHanoi4PegsFrameStewart(N, 0, P - 1, [1, 2], moves);
+      } else {
+        solveHanoi4PegsHeuristic(N, 0, P - 1, [1, 2], moves);
+      }
+    }
 
     setSolutionMoves(moves);
     setIsAutoSolving(true);
     setGameStatus("SOLVING");
-  }, [N, P, gameStatus]);
+  }, [N, P, gameStatus, selectedAlgorithm3P, selectedAlgorithm4P]);
 
   const handleSetupGame = (n, p, timeLimit) => {
     setN(n);
@@ -202,6 +215,7 @@ const Page = () => {
       setSolutionMoves(moves);
     }
 
+    // Score Data
     const timeTakenMs = Date.now() - startTime;
     const scoreData = {
       user_id: "anonymous",
@@ -327,7 +341,7 @@ const Page = () => {
               N={N}
               setN={setN}
               gameStatus={gameStatus}
-              handleSetupGame={handleSetupGame} 
+              handleSetupGame={handleSetupGame}
               selectedAlgorithm3P={selectedAlgorithm3P}
               setSelectedAlgorithm3P={setSelectedAlgorithm3P}
               selectedAlgorithm4P={selectedAlgorithm4P}

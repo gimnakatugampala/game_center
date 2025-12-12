@@ -1,7 +1,3 @@
-// ----------------------------
-// hanoi-utils.js
-// ----------------------------
-
 // --- Constants ---
 export const MIN_DISKS = 3;
 export const MAX_DISKS = 10;

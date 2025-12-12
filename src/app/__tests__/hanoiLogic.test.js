@@ -48,7 +48,7 @@ describe("initializePegs", () => {
 
   test("returns [] for invalid inputs", () => {
     const pegs = initializePegs(0, 3);
-    expect(pegs).toEqual([]); // Now passes
+    expect(pegs).toEqual([]);
   });
 });
 
@@ -118,7 +118,6 @@ describe("3-Peg Solver - Heuristic", () => {
     const moves = [];
     solveHanoi3PegsHeuristic(N, 0, 2, 1, moves);
     expect(moves.length).toBeGreaterThan(0);
-    // Skipping verifyFinalState since heuristic is non-optimal
   });
 });
 
@@ -152,6 +151,83 @@ describe("4-Peg Solver - Heuristic", () => {
     const moves = [];
     solveHanoi4PegsHeuristic(N, 0, 3, [1, 2], moves);
     expect(moves.length).toBeGreaterThan(0);
-    // Skipping verifyFinalState since heuristic is non-optimal
   });
+});
+
+//
+// --------------------------------------------------------
+// Benchmark – 15 Rounds for All Algorithms
+// --------------------------------------------------------
+const ROUNDS = 15;
+const ITERATIONS = 1; // Keep 1 for heavy computations like 10-20 disks
+
+const benchmark = (label, solveFn, argsBuilder) => {
+  const timesTotal = [];
+
+  for (let i = 0; i < ROUNDS; i++) {
+    const N = Math.floor(Math.random() * (10 - 5 + 1)) + 5; // Random disks 5 - 10
+    const start = performance.now();
+
+    for (let j = 0; j < ITERATIONS; j++) {
+      const moves = []; // create new moves array every iteration
+      const args = argsBuilder(N, moves);
+      solveFn(...args);
+    }
+
+    const end = performance.now();
+    const total = end - start;
+    const avg = total / ITERATIONS;
+
+    timesTotal.push({ N, total, avg });
+  }
+
+  console.log(`\n=== ${label} ===`);
+  timesTotal.forEach(({ N, total, avg }, idx) => {
+    console.log(
+      `Round ${idx + 1} (N=${N}): total ${total.toFixed(
+        6
+      )} ms, avg per iteration ${avg.toFixed(6)} ms`
+    );
+  });
+
+  const avgTotal = timesTotal.reduce((sum, t) => sum + t.avg, 0) / ROUNDS;
+  console.log(
+    "Average time per iteration across all rounds:",
+    avgTotal.toFixed(6),
+    "ms\n"
+  );
+};
+
+test("Run 15 benchmarks for each algorithm", () => {
+  benchmark("3-Peg Recursive", solveHanoi3PegsRecursive, (N, moves) => [
+    N,
+    0,
+    2,
+    1,
+    moves,
+  ]);
+
+  benchmark("3-Peg Heuristic", solveHanoi3PegsHeuristic, (N, moves) => [
+    N,
+    0,
+    2,
+    1,
+    moves,
+  ]);
+
+  benchmark("4-Peg Frame-Stewart", solveHanoi4PegsFrameStewart, (N, moves) => [
+    N,
+    0,
+    3,
+    [1, 2],
+    moves,
+  ]);
+
+  benchmark("4-Peg Heuristic", solveHanoi4PegsHeuristic, (N, moves) => [
+    N,
+    0,
+    3,
+    [1, 2],
+    moves,
+  ]);
 });
