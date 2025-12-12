@@ -467,6 +467,7 @@ class TSPGame extends Component {
     return { route, distance: minDistance };
   };
 
+  
   submitAnswer = async () => {
     try {
       this.setState({ isLoading: true, error: '' });
