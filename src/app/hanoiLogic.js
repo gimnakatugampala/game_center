@@ -60,8 +60,8 @@ export const solveHanoi3PegsRecursive = (
   solveHanoi3PegsRecursive(n - 1, auxiliary, destination, source, moves);
 };
 
-// Non-Optimal Heuristic (moves largest disk later)
-export const solveHanoi3PegsHeuristic = (
+// Non-Optimal Iterative (moves largest disk later)
+export const solveHanoi3PegsIterative = (
   n,
   source,
   destination,
@@ -74,7 +74,7 @@ export const solveHanoi3PegsHeuristic = (
     return;
   }
   moves.push({ disk: n - 1, from: source, to: auxiliary });
-  solveHanoi3PegsHeuristic(n - 1, source, destination, auxiliary, moves);
+  solveHanoi3PegsIterative(n - 1, source, destination, auxiliary, moves);
   moves.push({ disk: n - 1, from: auxiliary, to: destination });
 };
 
@@ -118,8 +118,8 @@ export const solveHanoi4PegsFrameStewart = (
   solveHanoi4PegsFrameStewart(k, aux1, destination, [source, aux2], moves);
 };
 
-// 4-Peg Non-Optimal Heuristic
-export const solveHanoi4PegsHeuristic = (
+// 4-Peg Non-Optimal Iterative
+export const solveHanoi4PegsIterative = (
   n,
   source,
   destination,
@@ -134,11 +134,11 @@ export const solveHanoi4PegsHeuristic = (
   const [aux1, aux2] = auxiliaries;
 
   // Move n-1 disks to aux1
-  solveHanoi4PegsHeuristic(n - 1, source, aux1, [destination, aux2], moves);
+  solveHanoi4PegsIterative(n - 1, source, aux1, [destination, aux2], moves);
 
   // Move largest disk to destination
   moves.push({ disk: n, from: source, to: destination });
 
   // Move n-1 disks from aux1 to destination
-  solveHanoi4PegsHeuristic(n - 1, aux1, destination, [source, aux2], moves);
+  solveHanoi4PegsIterative(n - 1, aux1, destination, [source, aux2], moves);
 };

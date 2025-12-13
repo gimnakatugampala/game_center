@@ -4,9 +4,9 @@ import {
   minMoves3Pegs,
   minMoves4Pegs,
   solveHanoi3PegsRecursive,
-  solveHanoi3PegsHeuristic,
+  solveHanoi3PegsIterative,
   solveHanoi4PegsFrameStewart,
-  solveHanoi4PegsHeuristic,
+  solveHanoi4PegsIterative,
 } from "../../app/components/hanoi/hanoi-utils";
 
 // Utility: verify final configuration
@@ -110,13 +110,13 @@ describe("3-Peg Solver - Recursive", () => {
 
 //
 // --------------------------------------------------------
-// 3-Peg Solver - Heuristic
+// 3-Peg Solver - Iterative
 // --------------------------------------------------------
-describe("3-Peg Solver - Heuristic", () => {
-  test("heuristic solver produces some moves", () => {
+describe("3-Peg Solver - Iterative", () => {
+  test("iterative solver produces some moves", () => {
     const N = 4;
     const moves = [];
-    solveHanoi3PegsHeuristic(N, 0, 2, 1, moves);
+    solveHanoi3PegsIterative(N, 0, 2, 1, moves);
     expect(moves.length).toBeGreaterThan(0);
   });
 });
@@ -143,13 +143,13 @@ describe("4-Peg Solver - Frame-Stewart", () => {
 
 //
 // --------------------------------------------------------
-// 4-Peg Solver - Heuristic
+// 4-Peg Solver - Iterative
 // --------------------------------------------------------
-describe("4-Peg Solver - Heuristic", () => {
-  test("heuristic solver produces some moves", () => {
+describe("4-Peg Solver - Iterative", () => {
+  test("iterative solver produces some moves", () => {
     const N = 4;
     const moves = [];
-    solveHanoi4PegsHeuristic(N, 0, 3, [1, 2], moves);
+    solveHanoi4PegsIterative(N, 0, 3, [1, 2], moves);
     expect(moves.length).toBeGreaterThan(0);
   });
 });
@@ -207,7 +207,7 @@ test("Run 15 benchmarks for each algorithm", () => {
     moves,
   ]);
 
-  benchmark("3-Peg Heuristic", solveHanoi3PegsHeuristic, (N, moves) => [
+  benchmark("3-Peg Iterative", solveHanoi3PegsIterative, (N, moves) => [
     N,
     0,
     2,
@@ -223,7 +223,7 @@ test("Run 15 benchmarks for each algorithm", () => {
     moves,
   ]);
 
-  benchmark("4-Peg Heuristic", solveHanoi4PegsHeuristic, (N, moves) => [
+  benchmark("4-Peg Iterative", solveHanoi4PegsIterative, (N, moves) => [
     N,
     0,
     3,
