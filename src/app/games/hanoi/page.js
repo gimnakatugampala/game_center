@@ -22,17 +22,18 @@ import {
   ALGORITHM_OPTIONS_4P,
 } from "../../components/hanoi/hanoi-utils.js";
 
-// Default disks for reset
 const DEFAULT_RANDOM_DISKS = 5;
 
 const Page = () => {
-  const [N, setN] = useState(0);
+  /* -------------------- STATES -------------------- */
+  const [N, setN] = useState(DEFAULT_RANDOM_DISKS);
   const [P, setP] = useState(3);
   const [pegs, setPegs] = useState([]);
   const [selectedPeg, setSelectedPeg] = useState(null);
   const [moveCount, setMoveCount] = useState(0);
   const [startTime, setStartTime] = useState(null);
-  const [gameStatus, setGameStatus] = useState("SETUP");
+  const [gameStatus, setGameStatus] = useState("SETUP"); // in-game status
+  const [gameState, setGameState] = useState("welcome"); // welcome/setup
   const [playerName, setPlayerName] = useState("");
   const [solutionMoves, setSolutionMoves] = useState([]);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
@@ -43,6 +44,7 @@ const Page = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
   const [error, setError] = useState("");
+  const [moveError, setMoveError] = useState(null);
 
   const [selectedAlgorithm3P, setSelectedAlgorithm3P] = useState(
     ALGORITHM_OPTIONS_3P.RECURSIVE
@@ -50,42 +52,32 @@ const Page = () => {
   const [selectedAlgorithm4P, setSelectedAlgorithm4P] = useState(
     ALGORITHM_OPTIONS_4P.FRAME_STEWART
   );
-  const [gameState, setGameState] = useState("welcome");
 
-  // Derived
-  const optimalMoves = useMemo(
-    () => (P === 3 ? minMoves3Pegs(N) : minMoves4Pegs(N)),
-    [N, P]
+  /* -------------------- DERIVED -------------------- */
+  const isStrictAlgorithmMode = useMemo(
+    () =>
+      (P === 3 && selectedAlgorithm3P === ALGORITHM_OPTIONS_3P.RECURSIVE) ||
+      (P === 4 && selectedAlgorithm4P === ALGORITHM_OPTIONS_4P.FRAME_STEWART),
+    [P, selectedAlgorithm3P, selectedAlgorithm4P]
   );
+
+  const targetMoves = useMemo(() => {
+    if (solutionMoves.length > 0) return solutionMoves.length;
+    return P === 3 ? minMoves3Pegs(N) : minMoves4Pegs(N);
+  }, [solutionMoves, N, P]);
+
   const isGameWon = useMemo(
     () => pegs[P - 1]?.length === N && N > 0,
     [pegs, N, P]
   );
 
-  // --- Handle Player Name Submission ---
-  const handlePlayerNameSubmit = () => {
-    if (!playerName.trim()) {
-      setError("Please enter your name to start the game");
-      return;
-    }
-
-    if (playerName.trim().length < 2) {
-      setError("Name must be at least 2 characters");
-      return;
-    }
-
-    setError(""); // Clear any previous errors
-    setGameState("setup"); // Move to setup phase
-  };
-
-  // Load leaderboard
+  /* -------------------- LEADERBOARD -------------------- */
   const loadLeaderboardData = useCallback(async () => {
     setIsLoading(true);
-    setApiError(null);
     try {
       const scores = await fetchLeaderboard();
       setLeaderboard(scores?.slice(0, 10) || []);
-    } catch (err) {
+    } catch {
       setApiError("Failed to load leaderboard.");
     } finally {
       setIsLoading(false);
@@ -96,166 +88,180 @@ const Page = () => {
     loadLeaderboardData();
   }, [loadLeaderboardData]);
 
-  // Randomize disks on client
-  useEffect(() => {
-    const random = Math.floor(Math.random() * (10 - 5 + 1)) + 5;
-    setN(random);
-  }, []);
+  /* -------------------- PLAYER NAME -------------------- */
+  const handlePlayerNameSubmit = () => {
+    if (!playerName.trim()) return setError("Please enter your name");
+    if (playerName.trim().length < 2)
+      return setError("Name must be at least 2 characters");
+    setError("");
+    setGameState("setup");
+  };
 
-  // Countdown Timer
+  /* -------------------- TIMER -------------------- */
   useEffect(() => {
     if (gameStatus !== "PLAYING") return;
     if (remainingTime <= 0) {
+      setRemainingTime(0);
       setGameStatus("GAMEOVER");
       setIsAutoSolving(false);
       return;
     }
-    const timer = setTimeout(() => setRemainingTime((r) => r - 1), 1000);
-    return () => clearTimeout(timer);
+    const t = setTimeout(
+      () => setRemainingTime((r) => Math.max(0, r - 1)),
+      1000
+    );
+    return () => clearTimeout(t);
   }, [remainingTime, gameStatus]);
 
-  // Peg click handler
+  /* -------------------- MANUAL MOVE -------------------- */
   const handlePegClick = useCallback(
     (pegIndex) => {
       if (gameStatus !== "PLAYING" || isAutoSolving) return;
+
       if (selectedPeg === null) {
         if (pegs[pegIndex]?.length > 0) setSelectedPeg(pegIndex);
         return;
       }
-      const source = selectedPeg;
-      const dest = pegIndex;
+
+      const from = selectedPeg;
+      const to = pegIndex;
       setSelectedPeg(null);
-      if (source === dest) return;
-      if (isMoveValid(pegs, source, dest)) {
-        setPegs((prev) => {
-          const newPegs = prev.map((p) => [...p]);
-          newPegs[dest].push(newPegs[source].pop());
-          return newPegs;
-        });
-        setMoveCount((c) => c + 1);
+
+      if (from === to) return;
+
+      if (isStrictAlgorithmMode) {
+        if (!isMoveValid(pegs, from, to)) {
+          setMoveError(
+            "❌ Invalid move! Only one disk at a time and no larger disk on smaller disk."
+          );
+          return;
+        }
+        const nextOptimalMove = solutionMoves[currentMoveIndex];
+        if (
+          nextOptimalMove &&
+          nextOptimalMove.from === from &&
+          nextOptimalMove.to === to
+        )
+          setCurrentMoveIndex((i) => i + 1);
       }
+
+      setMoveError(null);
+
+      setPegs((prev) => {
+        const copy = prev.map((p) => [...p]);
+        copy[to].push(copy[from].pop());
+        return copy;
+      });
+
+      setMoveCount((c) => c + 1);
     },
-    [pegs, selectedPeg, gameStatus, isAutoSolving]
+    [
+      pegs,
+      selectedPeg,
+      gameStatus,
+      isAutoSolving,
+      solutionMoves,
+      currentMoveIndex,
+      isStrictAlgorithmMode,
+    ]
   );
-  // const [timeRecursive, setTimeRecursive] = useState(0);
-  // const [timeThreaded, setTimeThreaded] = useState(0);
-  // Auto-solve generator
-  const generateSolution = useCallback(() => {
-    if (N === 0 || gameStatus !== "PLAYING") return;
 
+  /* -------------------- SETUP GAME -------------------- */
+  const handleSetupGame = (n, p, limit) => {
     const moves = [];
-    setPegs(initializePegs(N, P));
-    setMoveCount(0);
-    setCurrentMoveIndex(0);
 
-    if (P === 3) {
-      if (selectedAlgorithm3P === ALGORITHM_OPTIONS_3P.RECURSIVE) {
-        solveHanoi3PegsRecursive(N, 0, P - 1, 1, moves);
-      } else {
-        solveHanoi3PegsHeuristic(N, 0, P - 1, 1, moves);
-      }
+    if (p === 3) {
+      selectedAlgorithm3P === ALGORITHM_OPTIONS_3P.RECURSIVE
+        ? solveHanoi3PegsRecursive(n, 0, p - 1, 1, moves)
+        : solveHanoi3PegsHeuristic(n, 0, p - 1, 1, moves);
     } else {
-      if (selectedAlgorithm4P === ALGORITHM_OPTIONS_4P.FRAME_STEWART) {
-        solveHanoi4PegsFrameStewart(N, 0, P - 1, [1, 2], moves);
-      } else {
-        solveHanoi4PegsHeuristic(N, 0, P - 1, [1, 2], moves);
-      }
+      selectedAlgorithm4P === ALGORITHM_OPTIONS_4P.FRAME_STEWART
+        ? solveHanoi4PegsFrameStewart(n, 0, p - 1, [1, 2], moves)
+        : solveHanoi4PegsHeuristic(n, 0, p - 1, [1, 2], moves);
     }
 
-    setSolutionMoves(moves);
-    setIsAutoSolving(true);
-    setGameStatus("SOLVING");
-  }, [N, P, gameStatus, selectedAlgorithm3P, selectedAlgorithm4P]);
-
-  const handleSetupGame = (n, p, timeLimit) => {
     setN(n);
     setP(p);
     setPegs(initializePegs(n, p));
     setMoveCount(0);
+    setSolutionMoves(moves);
     setCurrentMoveIndex(0);
-    setRemainingTime(timeLimit);
+    setRemainingTime(limit);
     setGameStatus("PLAYING");
     setIsAutoSolving(false);
-    setSolutionMoves([]);
     setStartTime(Date.now());
   };
 
-  // Auto-solve moves effect
+  /* -------------------- AUTO SOLVE -------------------- */
+  const generateSolution = () => {
+    setPegs(initializePegs(N, P));
+    setMoveCount(0);
+    setCurrentMoveIndex(0);
+    setIsAutoSolving(true);
+    setGameStatus("SOLVING");
+  };
+
   useEffect(() => {
-    if (!isAutoSolving || currentMoveIndex >= solutionMoves.length) {
-      if (isAutoSolving) setGameStatus("WON");
+    if (!isAutoSolving) return;
+    if (currentMoveIndex >= solutionMoves.length) {
+      setGameStatus("WON");
       setIsAutoSolving(false);
       return;
     }
 
-    const timer = setTimeout(() => {
+    const t = setTimeout(() => {
       const { from, to } = solutionMoves[currentMoveIndex];
       setPegs((prev) => {
-        const newPegs = prev.map((p) => [...p]);
-        newPegs[to].push(newPegs[from].pop());
-        return newPegs;
+        const copy = prev.map((p) => [...p]);
+        copy[to].push(copy[from].pop());
+        return copy;
       });
       setMoveCount((c) => c + 1);
-      setCurrentMoveIndex((c) => c + 1);
+      setCurrentMoveIndex((i) => i + 1);
     }, 200);
 
-    return () => clearTimeout(timer);
+    return () => clearTimeout(t);
   }, [isAutoSolving, currentMoveIndex, solutionMoves]);
 
-  // Post score & handle win
+  /* -------------------- WIN + SCORE -------------------- */
   useEffect(() => {
     if (!isGameWon) return;
 
-    if (gameStatus !== "WON") setGameStatus("WON");
+    setGameStatus("WON");
 
-    if (solutionMoves.length === 0) {
-      const moves = [];
-      if (P === 3) solveHanoi3PegsRecursive(N, 0, P - 1, 1, moves);
-      else solveHanoi4PegsFrameStewart(N, 0, P - 1, [1, 2], moves);
-      setSolutionMoves(moves);
-    }
-
-    // Score Data
-    const timeTakenMs = Date.now() - startTime;
-    const scoreData = {
+    const score = {
       user_id: "anonymous",
       player_name: playerName || "Anonymous",
       pegs: P,
       disks: N,
       user_moves: moveCount,
-      target_moves: optimalMoves,
-      is_optimal: moveCount === optimalMoves,
-      time_taken_ms: timeTakenMs,
+      target_moves: targetMoves,
+      is_optimal: moveCount === targetMoves,
+      time_taken_ms: Date.now() - startTime,
     };
 
     (async () => {
       try {
         setIsLoading(true);
-        await postScore(scoreData);
+        await postScore(score);
         await loadLeaderboardData();
-      } catch {
-        setApiError("Failed to update leaderboard.");
       } finally {
         setIsLoading(false);
       }
     })();
   }, [isGameWon]);
 
-  // Reset Game
-  const resetGame = useCallback(() => {
+  /* -------------------- RESET -------------------- */
+  const resetGame = () => {
     setGameStatus("SETUP");
     setPegs([]);
     setN(DEFAULT_RANDOM_DISKS);
-    setSelectedPeg(null);
     setMoveCount(0);
     setSolutionMoves([]);
     setCurrentMoveIndex(0);
     setIsAutoSolving(false);
-    setRemainingTime(timeLimit || 0);
-    setApiError(null);
-    setSelectedAlgorithm3P(ALGORITHM_OPTIONS_3P.RECURSIVE);
-    setSelectedAlgorithm4P(ALGORITHM_OPTIONS_4P.FRAME_STEWART);
-  }, [timeLimit]);
+    setGameState("setup");
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 p-4 md:p-10 font-sans">
@@ -382,7 +388,7 @@ const Page = () => {
                   N={N}
                   P={P}
                   moveCount={moveCount}
-                  optimalMoves={optimalMoves}
+                  optimalMoves={targetMoves}
                   gameStatus={gameStatus}
                   currentMoveIndex={currentMoveIndex}
                   solutionMoves={solutionMoves}
@@ -403,48 +409,64 @@ const Page = () => {
           {/* Overlay on Game End */}
           {(gameStatus === "WON" || gameStatus === "GAMEOVER") &&
             gameStatus !== "SHOW_DESCRIPTION" && (
-              <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
-                <div className="bg-gray-900 p-10 rounded-3xl shadow-2xl text-center max-w-lg w-full animate-fadeIn space-y-6">
-                  <h3 className="text-4xl font-extrabold mb-2 text-indigo-400">
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+                <div className="relative w-full max-w-lg rounded-[28px] border border-indigo-500/20 bg-gradient-to-br from-slate-900/90 to-gray-900/95 shadow-[0_40px_100px_rgba(0,0,0,0.8)] p-10 text-center animate-fadeIn space-y-6">
+                  {/* Glow Accent */}
+                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-40 h-40 bg-indigo-500/20 blur-[80px] rounded-full" />
+
+                  <h3 className="text-4xl font-extrabold bg-gradient-to-r from-indigo-400 to-purple-500 bg-clip-text text-transparent">
                     {gameStatus === "WON"
                       ? isAutoSolving
-                        ? "Solved by Algorithm!"
-                        : "🎉 You Solved It!"
-                      : "⏱ Time's Up! Game Over"}
+                        ? "Solved by Algorithm"
+                        : "🎉 Puzzle Completed"
+                      : "⏱ Time Over"}
                   </h3>
 
                   {gameStatus === "WON" && (
-                    <p className="text-xl text-gray-100">
-                      Total Moves:{" "}
-                      <span
-                        className={`font-bold ${
-                          moveCount === optimalMoves
-                            ? "text-green-400"
-                            : "text-red-400"
-                        }`}
-                      >
-                        {moveCount}
-                      </span>{" "}
-                      (Optimal:{" "}
-                      <span className="font-bold text-green-400">
-                        {optimalMoves}
-                      </span>
-                      )
-                    </p>
+                    <div className="text-xl text-gray-200 space-y-2">
+                      <p>
+                        Moves Used:{" "}
+                        <span
+                          className={`font-bold ${
+                            moveCount === targetMoves
+                              ? "text-green-400"
+                              : "text-red-400"
+                          }`}
+                        >
+                          {moveCount}
+                        </span>
+                      </p>
+
+                      <p className="text-sm text-gray-400">
+                        Target (
+                        {selectedAlgorithm3P ===
+                          ALGORITHM_OPTIONS_3P.RECURSIVE ||
+                        selectedAlgorithm4P ===
+                          ALGORITHM_OPTIONS_4P.FRAME_STEWART
+                          ? "Optimal"
+                          : "Heuristic"}{" "}
+                        Path):{" "}
+                        <span className="font-semibold text-indigo-300">
+                          {targetMoves}
+                        </span>
+                      </p>
+                    </div>
                   )}
 
-                  <div className="flex flex-col md:flex-row gap-4 justify-center mt-4">
+                  {/* Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                     {gameStatus === "WON" && solutionMoves.length > 0 && (
                       <button
                         onClick={() => setGameStatus("SHOW_DESCRIPTION")}
-                        className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-2xl transition duration-150 shadow-lg hover:scale-[1.02]"
+                        className="px-6 py-3 rounded-2xl bg-purple-600/90 hover:bg-purple-700 text-white font-bold shadow-lg hover:scale-[1.03] transition"
                       >
-                        Show Description
+                        View Solution
                       </button>
                     )}
+
                     <button
                       onClick={resetGame}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl transition duration-150 shadow-lg hover:scale-[1.02]"
+                      className="px-6 py-3 rounded-2xl bg-indigo-600/90 hover:bg-indigo-700 text-white font-bold shadow-lg hover:scale-[1.03] transition"
                     >
                       Play Again
                     </button>
