@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   PEGS_OPTIONS,
   MIN_DISKS,
@@ -9,9 +9,7 @@ import {
   ALGORITHM_OPTIONS_4P,
 } from "./hanoi-utils";
 import GameDescription from "./gameDescription";
-
-const MIN_RANDOM = 5;
-const MAX_RANDOM = 10;
+import InstructionsCard from "./InstructionCard";
 
 const SetupPanel = ({
   playerName,
@@ -28,32 +26,30 @@ const SetupPanel = ({
   setSelectedAlgorithm4P,
   timeLimit,
   setTimeLimit,
+  solutionMoves = [],
+  resetGame,
   MIN_TIME = 30,
   MAX_TIME = 600,
 }) => {
   const isSetup = gameStatus === "SETUP";
-
-  // -------------------------------
-  // Random/Manual Disk Mode
-  // -------------------------------
   const [useRandomN, setUseRandomN] = useState(true);
 
+  // Initialize N randomly only if Random mode is ON
   useEffect(() => {
-    if (useRandomN) {
+    if (useRandomN && isSetup) {
       const randomValue = Math.floor(Math.random() * 6) + 5;
       setN(randomValue);
     }
-  }, [useRandomN, setN]);
+  }, [useRandomN, setN, isSetup]);
 
   const currentAlgorithmOptions =
     P === 3 ? ALGORITHM_OPTIONS_3P : ALGORITHM_OPTIONS_4P;
-
   const currentSelectedAlgorithm =
     P === 3 ? selectedAlgorithm3P : selectedAlgorithm4P;
-
   const setSelectedAlgorithm =
     P === 3 ? setSelectedAlgorithm3P : setSelectedAlgorithm4P;
 
+  // Set default algorithm if none selected
   useEffect(() => {
     if (P === 3 && !selectedAlgorithm3P)
       setSelectedAlgorithm3P(ALGORITHM_OPTIONS_3P.RECURSIVE);
@@ -67,7 +63,13 @@ const SetupPanel = ({
     setSelectedAlgorithm4P,
   ]);
 
-  // Hover style consistent with GameDescription
+  const isStrictAlgorithmMode = useMemo(() => {
+    return (
+      (P === 3 && selectedAlgorithm3P === ALGORITHM_OPTIONS_3P.RECURSIVE) ||
+      (P === 4 && selectedAlgorithm4P === ALGORITHM_OPTIONS_4P.FRAME_STEWART)
+    );
+  }, [P, selectedAlgorithm3P, selectedAlgorithm4P]);
+
   const hoverCardClass =
     "transition-transform duration-200 hover:scale-105 hover:shadow-2xl";
 
@@ -88,14 +90,11 @@ const SetupPanel = ({
           onChange={(e) => setPlayerName(e.target.value)}
           placeholder="Enter your name"
           disabled={!isSetup}
-          className="w-full rounded-2xl border border-gray-700 bg-gray-800 text-white p-3 
-          focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 
-          placeholder-gray-500 transition duration-150 
-          disabled:bg-gray-700/50 disabled:text-gray-500"
+          className="w-full rounded-2xl border border-gray-700 bg-gray-800 text-white p-3 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 placeholder-gray-500 transition duration-150 disabled:bg-gray-700/50 disabled:text-gray-500"
         />
       </div>
 
-      {/* Pegs Selection */}
+      {/* Pegs */}
       <div className={`space-y-2 ${hoverCardClass}`}>
         <p className="text-sm font-semibold text-gray-400">
           Number of Pegs (P):
@@ -106,8 +105,7 @@ const SetupPanel = ({
               key={peg}
               onClick={() => setP(peg)}
               disabled={!isSetup}
-              className={`flex-1 py-3 rounded-2xl font-bold transition-all duration-200 text-white 
-              ${
+              className={`flex-1 py-3 rounded-2xl font-bold transition-all duration-200 text-white ${
                 P === peg
                   ? "bg-indigo-600 ring-2 ring-indigo-400 shadow-lg"
                   : "bg-gray-800 hover:bg-gray-700 hover:shadow-lg"
@@ -119,7 +117,7 @@ const SetupPanel = ({
         </div>
       </div>
 
-      {/* Disk random/manual selection */}
+      {/* Disk Mode */}
       <div
         className={`p-4 border border-gray-700 rounded-2xl bg-gray-800/60 ${hoverCardClass}`}
       >
@@ -127,18 +125,16 @@ const SetupPanel = ({
           <label className="text-sm font-semibold text-gray-400">
             Current Disk Mode:
           </label>
-
           <button
             onClick={() => setUseRandomN(!useRandomN)}
             disabled={!isSetup}
-            className={`px-3 py-1 rounded-xl text-xs font-bold transition-all 
-              ${
-                useRandomN
-                  ? "bg-red-600 text-white hover:bg-red-800"
-                  : "bg-green-600 text-white hover:bg-green-800"
-              }`}
+            className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
+              useRandomN
+                ? "bg-red-600 text-white hover:bg-red-800"
+                : "bg-green-600 text-white hover:bg-green-800"
+            }`}
           >
-            {useRandomN ? "Random (Hard) " : "Manual (Easy)"}
+            {useRandomN ? "Random (Hard)" : "Manual (Easy)"}
           </button>
         </div>
 
@@ -146,7 +142,6 @@ const SetupPanel = ({
           Number of Disks: {N}
         </div>
 
-        {/* Slider only when manual mode */}
         {!useRandomN && (
           <>
             <input
@@ -203,12 +198,11 @@ const SetupPanel = ({
               key={key}
               onClick={() => setSelectedAlgorithm(label)}
               disabled={!isSetup}
-              className={`py-3 px-4 rounded-2xl font-medium text-left transition-all duration-200
-                ${
-                  currentSelectedAlgorithm === label
-                    ? "bg-purple-600 text-white ring-2 ring-purple-400 shadow-2xl"
-                    : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:shadow-lg"
-                }`}
+              className={`py-3 px-4 rounded-2xl font-medium text-left transition-all duration-200 ${
+                currentSelectedAlgorithm === label
+                  ? "bg-purple-600 text-white ring-2 ring-purple-400 shadow-2xl"
+                  : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:shadow-lg"
+              }`}
             >
               {label}
             </button>
@@ -220,22 +214,29 @@ const SetupPanel = ({
       <button
         onClick={() => handleSetupGame(N, P, timeLimit)}
         disabled={!playerName || !isSetup}
-        className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 
-          text-white font-bold py-4 rounded-2xl shadow-lg transition duration-150 
-          hover:scale-105 hover:shadow-2xl"
+        className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 rounded-2xl shadow-lg transition duration-150 hover:scale-105 hover:shadow-2xl"
       >
         Start Round ({N} Disks, {P} Pegs)
       </button>
 
-      {/* Description */}
-      <div className="mt-6">
-        <GameDescription
-          N={N}
-          P={P}
-          selectedAlgorithm3P={selectedAlgorithm3P}
-          selectedAlgorithm4P={selectedAlgorithm4P}
-        />
-      </div>
+      {/* Game Description */}
+      <GameDescription
+        N={N}
+        P={P}
+        selectedAlgorithm3P={selectedAlgorithm3P}
+        selectedAlgorithm4P={selectedAlgorithm4P}
+        isStrictAlgorithmMode={isStrictAlgorithmMode}
+        solutionMoves={solutionMoves}
+        gameStatus={gameStatus}
+        resetGame={resetGame}
+      />
+
+      {/* Instructions */}
+      <InstructionsCard
+        selectedAlgorithm3P={selectedAlgorithm3P}
+        selectedAlgorithm4P={selectedAlgorithm4P}
+        P={P}
+      />
     </div>
   );
 };
