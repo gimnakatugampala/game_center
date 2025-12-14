@@ -52,10 +52,13 @@ class QueensAlgorithms {
 
     solve(0);
     const endTime = performance.now();
+    
+    // FIX: Ensure time is always greater than 0
+    const timeTaken = Math.max(endTime - startTime, 0.0001);
 
     return {
       solutions,
-      time: (endTime - startTime).toFixed(4),
+      time: timeTaken.toFixed(4),
       count: solutions.length
     };
   }
@@ -112,10 +115,13 @@ class QueensAlgorithms {
     results.forEach(result => solutions.push(...result));
 
     const endTime = performance.now();
+    
+    // FIX: Ensure time is always greater than 0
+    const timeTaken = Math.max(endTime - startTime, 0.0001);
 
     return {
       solutions,
-      time: (endTime - startTime).toFixed(4),
+      time: timeTaken.toFixed(4),
       count: solutions.length
     };
   }
@@ -284,6 +290,7 @@ describe('🎯 COURSEWORK REQUIREMENTS VERIFICATION', () => {
       const speedup = seqTime / threadTime;
       
       expect(speedup).toBeGreaterThan(0);
+      expect(isFinite(speedup)).toBe(true);
       log(`📊 Sequential: ${seqResult.time} ms`);
       log(`📊 Threaded: ${threadResult.time} ms`);
       log(`📊 Speedup: ${speedup.toFixed(2)}x\n`);
@@ -731,6 +738,7 @@ describe('⚙️ Performance & Complexity Analysis', () => {
     const speedup = seqTime / threadTime;
     
     expect(speedup).toBeGreaterThan(0);
+    expect(isFinite(speedup)).toBe(true);
     
     log('\n🚀 Speedup Analysis:');
     log(`   Sequential: ${seqTime.toFixed(4)} ms`);
