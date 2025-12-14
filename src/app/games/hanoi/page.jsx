@@ -24,16 +24,20 @@ import {
 
 const DEFAULT_RANDOM_DISKS = 5;
 
+/**
+ * Main Tower of Hanoi game page component
+ * Manages game state, moves, timer, and solver functionality
+ */
 const Page = () => {
-  /* -------------------- STATES -------------------- */
+  const [solverTimeMs, setSolverTimeMs] = useState(null);
   const [N, setN] = useState(DEFAULT_RANDOM_DISKS);
   const [P, setP] = useState(3);
   const [pegs, setPegs] = useState([]);
   const [selectedPeg, setSelectedPeg] = useState(null);
   const [moveCount, setMoveCount] = useState(0);
   const [startTime, setStartTime] = useState(null);
-  const [gameStatus, setGameStatus] = useState("SETUP"); // PLAYING, WON, GAMEOVER, SOLVING
-  const [gameState, setGameState] = useState("welcome"); // welcome/setup
+  const [gameStatus, setGameStatus] = useState("SETUP");
+  const [gameState, setGameState] = useState("welcome");
   const [playerName, setPlayerName] = useState("");
   const [solutionMoves, setSolutionMoves] = useState([]);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
@@ -56,7 +60,6 @@ const Page = () => {
     ALGORITHM_OPTIONS_4P.FRAME_STEWART
   );
 
-  /* -------------------- DERIVED -------------------- */
   const isStrictAlgorithmMode = useMemo(
     () =>
       (P === 3 && selectedAlgorithm3P === ALGORITHM_OPTIONS_3P.RECURSIVE) ||
@@ -101,7 +104,10 @@ const Page = () => {
     return "";
   }, [isOptimalWin, isPartialWin]);
 
-  /* -------------------- LEADERBOARD -------------------- */
+  /**
+   * Loads leaderboard data from API
+   * Fetches top 10 scores and updates leaderboard state
+   */
   const loadLeaderboardData = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -118,7 +124,10 @@ const Page = () => {
     loadLeaderboardData();
   }, [loadLeaderboardData]);
 
-  /* -------------------- PLAYER NAME -------------------- */
+  /**
+   * Validates and processes player name submission
+   * Requires minimum 2 characters and transitions to setup screen
+   */
   const handlePlayerNameSubmit = () => {
     if (!playerName.trim()) return setError("Please enter your name");
     if (playerName.trim().length < 2)
@@ -127,7 +136,10 @@ const Page = () => {
     setGameState("setup");
   };
 
-  /* -------------------- TIMER -------------------- */
+  /**
+   * Timer effect: decrements remaining time every second
+   * Sets game status to GAMEOVER when time reaches zero
+   */
   useEffect(() => {
     if (!shouldShowTimer) return;
     if (remainingTime <= 0) {
@@ -138,7 +150,11 @@ const Page = () => {
     return () => clearTimeout(timer);
   }, [remainingTime, shouldShowTimer]);
 
-  /* -------------------- MANUAL MOVE -------------------- */
+  /**
+   * Handles peg click for manual disk movement
+   * First click selects source peg, second click selects destination and executes move
+   * Validates move legality before execution
+   */
   const handlePegClick = useCallback(
     (pegIndex) => {
       if (gameStatus !== "PLAYING" || isAutoSolving) return;
@@ -162,14 +178,12 @@ const Page = () => {
 
       setMoveError(null);
 
-      // Move disk
       setPegs((prev) => {
         const copy = prev.map((p) => [...p]);
         copy[to].push(copy[from].pop());
         return copy;
       });
 
-      // Track move as letter notation
       setUserMovesList((prev) => [
         ...prev,
         { from: pegLetters[from], to: pegLetters[to] },
@@ -180,12 +194,20 @@ const Page = () => {
     [pegs, selectedPeg, gameStatus, isAutoSolving, pegLetters]
   );
 
-  /* -------------------- SETUP GAME -------------------- */
+  /**
+   * Initializes a new game with specified parameters
+   * Generates solution using selected algorithm and measures execution time
+   * @param {number} n - Number of disks
+   * @param {number} p - Number of pegs
+   * @param {number} limit - Time limit in seconds
+   */
   const handleSetupGame = (n, p, limit) => {
     const moves = [];
     const strict =
       (p === 3 && selectedAlgorithm3P === ALGORITHM_OPTIONS_3P.RECURSIVE) ||
       (p === 4 && selectedAlgorithm4P === ALGORITHM_OPTIONS_4P.FRAME_STEWART);
+
+    const startPerf = performance.now();
 
     if (p === 3) {
       strict
@@ -196,6 +218,8 @@ const Page = () => {
         ? solveHanoi4PegsFrameStewart(n, 0, p - 1, [1, 2], moves)
         : solveHanoi4PegsIterative(n, 0, p - 1, [1, 2], moves);
     }
+    const endPerf = performance.now();
+    setSolverTimeMs(endPerf - startPerf);
 
     setN(n);
     setP(p);
@@ -216,7 +240,10 @@ const Page = () => {
     setStartTime(Date.now());
   };
 
-  /* -------------------- AUTO SOLVE -------------------- */
+  /**
+   * Starts auto-solving mode
+   * Resets game state and begins executing solution moves automatically
+   */
   const generateSolution = () => {
     if (!solutionMoves.length) return;
     setPegs(initializePegs(N, P));
@@ -230,6 +257,10 @@ const Page = () => {
     setRemainingTime(null);
   };
 
+  /**
+   * Auto-solver effect: executes solution moves one by one with 200ms delay
+   * Validates each move and stops if invalid move is encountered
+   */
   useEffect(() => {
     if (!isAutoSolving || gameStatus !== "SOLVING") return;
     if (currentMoveIndex >= solutionMoves.length) {
@@ -260,7 +291,10 @@ const Page = () => {
     return () => clearTimeout(timer);
   }, [isAutoSolving, gameStatus, currentMoveIndex, solutionMoves]);
 
-  /* -------------------- WIN + SCORE -------------------- */
+  /**
+   * Win detection effect: triggers when game is won
+   * Submits score to leaderboard and reloads leaderboard data
+   */
   useEffect(() => {
     if (!isGameWon || isAutoSolving) return;
 
@@ -274,6 +308,7 @@ const Page = () => {
       target_moves: targetMoves,
       is_optimal: moveCount === targetMoves,
       time_taken_ms: Date.now() - startTime,
+      solver_time_ms: solverTimeMs,
     };
 
     (async () => {
@@ -287,7 +322,10 @@ const Page = () => {
     })();
   }, [isGameWon]);
 
-  /* -------------------- RESET -------------------- */
+  /**
+   * Resets all game state to initial values
+   * Returns game to setup screen
+   */
   const resetGame = () => {
     setGameStatus("SETUP");
     setPegs([]);
@@ -302,10 +340,8 @@ const Page = () => {
     setGameState("setup");
   };
 
-  /* -------------------- RENDER -------------------- */
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 p-4 md:p-10 font-sans">
-      {/* Header */}
       <header className="text-center mb-8">
         <h1 className="text-5xl font-extrabold text-indigo-400 mb-2 tracking-tight">
           Tower of Hanoi Explorer
@@ -316,7 +352,6 @@ const Page = () => {
         </p>
       </header>
 
-      {/* Welcome Screen */}
       {gameState === "welcome" && (
         <div className="flex justify-center items-center min-h-[70vh] px-5 py-10">
           <div className="bg-slate-800/90 backdrop-blur-xl rounded-[30px] p-12 max-w-2xl w-full shadow-[0_30px_80px_rgba(0,0,0,0.6)] border-2 border-pink-500/30 text-center animate-fadeInUp">
@@ -371,10 +406,8 @@ const Page = () => {
         </div>
       )}
 
-      {/* Main Game */}
       {gameState !== "welcome" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-          {/* Setup Panel */}
           <SetupPanel
             playerName={playerName}
             setPlayerName={setPlayerName}
@@ -408,9 +441,7 @@ const Page = () => {
             </div>
           )}
 
-          {/* Game Board & Status */}
           <div className="p-6 bg-gray-900 rounded-3xl shadow-2xl border border-gray-800 w-full max-w-lg mx-auto space-y-6">
-            {/* Game Won */}
             {gameStatus === "WON" && (
               <div className="p-4 bg-green-900/60 rounded-2xl shadow-inner text-center space-y-3">
                 {resultMessage && (
@@ -435,7 +466,6 @@ const Page = () => {
               </div>
             )}
 
-            {/* Timer */}
             {shouldShowTimer && remainingTime != null && (
               <div className="text-lg text-center font-semibold text-yellow-400 animate-pulse">
                 Time Remaining: {Math.floor(remainingTime / 60)}:
@@ -449,14 +479,12 @@ const Page = () => {
               </div>
             )}
 
-            {/* Game Info */}
             <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500 text-center">
               {gameStatus === "SETUP"
                 ? "Ready to Start"
                 : `Game: ${N} Disks, ${P} Pegs`}
             </h2>
 
-            {/* Peg Display */}
             {N > 0 && pegs.length > 0 && (
               <PegsDisplay
                 pegs={pegs}
@@ -469,7 +497,6 @@ const Page = () => {
               />
             )}
 
-            {/* Moves */}
             {["WON", "SOLVING", "PLAYING"].includes(gameStatus) && (
               <div className="p-4 bg-black/20 rounded-2xl overflow-auto max-h-64">
                 <h3 className="text-lg font-bold text-yellow-300 mb-2 text-center">
@@ -494,7 +521,6 @@ const Page = () => {
               </div>
             )}
 
-            {/* Moves Card */}
             {gameStatus === "WON" && (
               <MovesCard
                 userMoves={moveCount}
@@ -504,7 +530,6 @@ const Page = () => {
               />
             )}
 
-            {/* Status & Solver Panel */}
             {["PLAYING", "SOLVING"].includes(gameStatus) && (
               <StatusAndSolver
                 N={N}
@@ -516,10 +541,14 @@ const Page = () => {
                 solutionMoves={solutionMoves}
                 generateSolution={generateSolution}
                 isAutoSolving={isAutoSolving}
+                solverTimeMs={solverTimeMs}
               />
             )}
-
-            {/* Reset Button */}
+            {gameStatus === "WON" && solverTimeMs != null && (
+              <div className="text-sm text-cyan-400 text-center mt-2">
+                Solver Execution Time: {solverTimeMs.toFixed(2)} ms
+              </div>
+            )}
             <div className="mt-6 flex justify-center">
               <button
                 onClick={resetGame}
@@ -530,7 +559,6 @@ const Page = () => {
             </div>
           </div>
 
-          {/* Leaderboard */}
           <Leaderboard
             leaderboard={leaderboard}
             isLoading={isLoading}

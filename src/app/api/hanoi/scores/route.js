@@ -1,8 +1,11 @@
-// src/app/api/hanoi/scores/route.js
 import { NextResponse } from "next/server";
 import db from "../../../lib/db";
 
-// --- GET Leaderboard ---
+/**
+ * GET endpoint for fetching Tower of Hanoi leaderboard
+ * Returns top 100 scores sorted by: disks (desc), moves (asc), time (asc), created_at (asc)
+ * @returns {Promise<NextResponse>} JSON response with scores array
+ */
 export async function GET() {
   try {
     const rows = await db.query(`
@@ -33,7 +36,12 @@ export async function GET() {
   }
 }
 
-// --- POST New Score ---
+/**
+ * POST endpoint for saving a new Tower of Hanoi score
+ * Creates or updates user record, then inserts score into database
+ * @param {Request} request - Request object containing score data
+ * @returns {Promise<NextResponse>} JSON response with success status and score ID
+ */
 export async function POST(request) {
   try {
     const {
@@ -47,7 +55,6 @@ export async function POST(request) {
       time_taken_ms,
     } = await request.json();
 
-    // Validation
     if (
       !player_name ||
       pegs == null ||
@@ -66,7 +73,6 @@ export async function POST(request) {
       );
     }
 
-    // --- 1. Ensure user exists in hanoi_users ---
     let userResult = await db.query(
       `SELECT user_id FROM hanoi_users WHERE player_name = ? LIMIT 1`,
       [player_name]
@@ -75,10 +81,8 @@ export async function POST(request) {
     let finalUserId;
 
     if (userResult.length > 0) {
-      // Existing user
       finalUserId = userResult[0].user_id;
     } else {
-      // Create new user
       const insertUser = await db.execute(
         `INSERT INTO hanoi_users (player_name) VALUES (?)`,
         [player_name]
@@ -86,7 +90,6 @@ export async function POST(request) {
       finalUserId = insertUser.insertId;
     }
 
-    // --- 2. Insert score into hanoi_scores ---
     const result = await db.execute(
       `
       INSERT INTO hanoi_scores 

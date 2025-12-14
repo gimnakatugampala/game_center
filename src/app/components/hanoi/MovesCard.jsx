@@ -2,6 +2,13 @@
 
 import React from "react";
 
+/**
+ * Displays game summary with user moves vs optimal moves
+ * @param {number} userMoves - Number of moves made by user
+ * @param {number} optimalMoves - Optimal number of moves
+ * @param {boolean} isOptimal - Whether user achieved optimal solution
+ * @param {string} mode - Game mode (default: "MANUAL")
+ */
 const MovesCard = ({ userMoves, optimalMoves, isOptimal, mode = "MANUAL" }) => {
   const isPartial = userMoves > optimalMoves;
 
@@ -23,7 +30,6 @@ const MovesCard = ({ userMoves, optimalMoves, isOptimal, mode = "MANUAL" }) => {
         </div>
       </div>
 
-      {/* Result Badge */}
       {isOptimal ? (
         <div className="bg-green-500/20 border border-green-500/40 rounded-xl p-4 text-green-300 font-semibold text-lg">
           🏆 Perfect! You solved the puzzle using the optimal number of moves.
@@ -35,7 +41,6 @@ const MovesCard = ({ userMoves, optimalMoves, isOptimal, mode = "MANUAL" }) => {
         </div>
       ) : null}
 
-      {/* Educational Hint */}
       <p className="mt-4 text-slate-400 text-sm italic">
         Optimal moves represent the minimum number of moves required to solve
         the puzzle using an ideal algorithm.

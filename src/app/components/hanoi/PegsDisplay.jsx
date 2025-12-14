@@ -2,7 +2,9 @@
 
 import React from "react";
 
-// Disk colors for dark theme gradients
+/**
+ * Color gradients for disks in dark theme
+ */
 const DISK_COLORS = [
   "from-red-600 to-red-500",
   "from-orange-600 to-orange-500",
@@ -16,8 +18,15 @@ const DISK_COLORS = [
   "from-gray-500 to-gray-400",
 ];
 
+/**
+ * Individual disk component
+ * @param {number} size - Disk size (1 to N)
+ * @param {number} N - Total number of disks
+ * @param {boolean} isTop - Whether this is the top disk (movable)
+ * @param {boolean} isSelected - Whether this disk is currently selected
+ */
 const Disk = ({ size, N, isTop, isSelected }) => {
-  const widthPercentage = (size / N) * 80 + 20; // Min width 20%
+  const widthPercentage = (size / N) * 80 + 20;
   const colorIndex = (size - 1) % DISK_COLORS.length;
   const gradient = DISK_COLORS[colorIndex];
 
@@ -35,6 +44,16 @@ const Disk = ({ size, N, isTop, isSelected }) => {
   );
 };
 
+/**
+ * Displays all pegs with their disks
+ * @param {Array} pegs - Array of peg arrays containing disk sizes
+ * @param {number} P - Number of pegs
+ * @param {number} N - Total number of disks
+ * @param {number} selectedPeg - Index of currently selected peg
+ * @param {Function} handlePegClick - Callback when a peg is clicked
+ * @param {boolean} isAutoSolving - Whether auto-solver is active
+ * @param {string} gameStatus - Current game status
+ */
 const PegsDisplay = ({
   pegs,
   P,
@@ -79,7 +98,6 @@ const PegsDisplay = ({
             onClick={() => isClickable && handlePegClick(index)}
             style={{ minHeight: `${totalPegHeight}rem` }}
           >
-            {/* Peg Rod */}
             <div
               className="w-1 bg-gray-600/70 absolute z-0 rounded-full left-1/2 transform -translate-x-1/2"
               style={{
@@ -88,7 +106,6 @@ const PegsDisplay = ({
               }}
             ></div>
 
-            {/* Disks */}
             <div
               className="w-full flex flex-col-reverse items-center absolute left-0 right-0 z-10"
               style={{
@@ -108,13 +125,11 @@ const PegsDisplay = ({
               ))}
             </div>
 
-            {/* Peg Base */}
             <div
               className="w-4/5 h-4 bg-gray-700 rounded-t-2xl shadow-lg absolute left-1/2 transform -translate-x-1/2 z-20"
               style={{ bottom: `${LABEL_HEIGHT_REM}rem` }}
             ></div>
 
-            {/* Peg Label */}
             <p className="absolute bottom-0 text-sm md:text-lg font-semibold text-blue-300 z-30">
               Peg {String.fromCharCode(65 + index)}
             </p>

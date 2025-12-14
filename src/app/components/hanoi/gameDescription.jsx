@@ -8,6 +8,19 @@ import {
   ALGORITHM_OPTIONS_4P,
 } from "./hanoi-utils";
 
+/**
+ * Game description component displaying algorithm information and complexity analysis
+ * Shows optimal moves, algorithm details, and move breakdown calculations
+ * @param {number} N - Number of disks
+ * @param {number} P - Number of pegs
+ * @param {string} selectedAlgorithm3P - Selected algorithm for 3-peg mode
+ * @param {string} selectedAlgorithm4P - Selected algorithm for 4-peg mode
+ * @param {boolean} isStrictAlgorithmMode - Whether optimal algorithm is selected
+ * @param {Array} solutionMoves - Array of solution moves
+ * @param {string} gameStatus - Current game status
+ * @param {Function} setGameStatus - Function to update game status
+ * @param {Function} resetGame - Function to reset the game
+ */
 const GameDescription = ({
   N,
   P,
@@ -21,13 +34,17 @@ const GameDescription = ({
 }) => {
   const [showBreakdown, setShowBreakdown] = useState(false);
 
-  // Optimal moves for given N and P
+  /**
+   * Calculates optimal number of moves required for current configuration
+   */
   const optimalMoves = useMemo(
     () => (P === 3 ? minMoves3Pegs(N) : minMoves4Pegs(N)),
     [P, N]
   );
 
-  // Algorithm Description
+  /**
+   * Generates algorithm description and complexity information based on selected algorithm
+   */
   const algorithmDescription = useMemo(() => {
     if (P === 3) {
       if (selectedAlgorithm3P === ALGORITHM_OPTIONS_3P.RECURSIVE)
@@ -79,7 +96,9 @@ const GameDescription = ({
     };
   }, [P, selectedAlgorithm3P, selectedAlgorithm4P, N]);
 
-  // Programmatic Analysis: Recursive vs Iterative
+  /**
+   * Calculates and compares complexity metrics for recursive vs iterative approaches
+   */
   const programmaticComplexity = useMemo(() => {
     if (P === 3) {
       return {
@@ -110,7 +129,11 @@ const GameDescription = ({
     return null;
   }, [N, P]);
 
-  // Move breakdown per disk
+  /**
+   * Calculates move contribution breakdown for each disk
+   * For 3-peg: each disk contributes 2^(i-1) moves
+   * For 4-peg: uses Frame-Stewart partitioning
+   */
   const moveBreakdown = useMemo(() => {
     const breakdown = [];
     if (P === 3) {

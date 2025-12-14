@@ -1,29 +1,54 @@
-// --- Constants ---
+/**
+ * Minimum and maximum number of disks allowed in the game
+ */
 export const MIN_DISKS = 3;
 export const MAX_DISKS = 10;
 
+/**
+ * Random number of disks between 5 and 10
+ */
 export const RANDOM_DISKS = Math.floor(Math.random() * 6) + 5;
+
+/**
+ * Available peg options for the game
+ */
 export const PEGS_OPTIONS = [3, 4];
 
-// --- Solver Algorithm Options ---
+/**
+ * Algorithm options for 3-peg Tower of Hanoi
+ */
 export const ALGORITHM_OPTIONS_3P = {
-  RECURSIVE: "Recursive Optimal Solution",
-  NON_OPTIMAL: "Non-Optimal Iterative Solution",
+  RECURSIVE: "Recursive Solution",
+  NON_OPTIMAL: "Iterative Solution",
 };
 
+/**
+ * Algorithm options for 4-peg Tower of Hanoi
+ */
 export const ALGORITHM_OPTIONS_4P = {
-  FRAME_STEWART: "Frame-Stewart Optimal Solution",
-  NON_OPTIMAL: "Non-Optimal Iterative Solution",
+  FRAME_STEWART: "Frame-Stewart Solution",
+  NON_OPTIMAL: "Iterative Solution",
 };
 
-// --- Initialize Pegs ---
+/**
+ * Initializes pegs with all disks on the first peg
+ * @param {number} N - Number of disks
+ * @param {number} P - Number of pegs
+ * @returns {Array} Array of pegs with disks on the first peg
+ */
 export const initializePegs = (N, P) => {
   const pegs = Array.from({ length: P }, () => []);
   for (let i = N; i >= 1; i--) pegs[0].push(i);
   return pegs;
 };
 
-// --- Move Validation ---
+/**
+ * Validates if a move is legal according to Tower of Hanoi rules
+ * @param {Array} pegs - Array of peg arrays
+ * @param {number} sourceIndex - Index of source peg
+ * @param {number} destIndex - Index of destination peg
+ * @returns {boolean} True if move is valid
+ */
 export const isMoveValid = (pegs, sourceIndex, destIndex) => {
   const sourcePeg = pegs[sourceIndex];
   const destPeg = pegs[destIndex];
@@ -33,15 +58,33 @@ export const isMoveValid = (pegs, sourceIndex, destIndex) => {
   return destPeg.length === 0 || movingDisk < topDestDisk;
 };
 
-// --- Optimal Moves ---
+/**
+ * Calculates minimum moves required for 3-peg Tower of Hanoi
+ * @param {number} N - Number of disks
+ * @returns {number} Minimum moves (2^N - 1)
+ */
 export const minMoves3Pegs = (N) => Math.pow(2, N) - 1;
 
+/**
+ * Calculates minimum moves required for 4-peg Tower of Hanoi
+ * Uses known optimal values for small N, falls back to 3-peg formula for larger N
+ * @param {number} N - Number of disks
+ * @returns {number} Minimum moves
+ */
 export const minMoves4Pegs = (N) => {
   const knownOptimal = [0, 1, 3, 5, 9, 13, 17, 25, 33, 41, 49];
   return N < knownOptimal.length ? knownOptimal[N] : minMoves3Pegs(N);
 };
 
-// --- 3-Peg Recursive Solver ---
+/**
+ * Solves 3-peg Tower of Hanoi recursively (optimal solution)
+ * @param {number} N - Number of disks
+ * @param {number} source - Source peg index
+ * @param {number} dest - Destination peg index
+ * @param {number} aux - Auxiliary peg index
+ * @param {Array} moves - Array to store moves
+ * @param {number} offset - Disk numbering offset
+ */
 export const solveHanoi3PegsRecursive = (
   N,
   source,
@@ -56,7 +99,15 @@ export const solveHanoi3PegsRecursive = (
   solveHanoi3PegsRecursive(N - 1, aux, dest, source, moves, offset);
 };
 
-// --- 3-Peg Iterative Solver (FIXED) ---
+/**
+ * Solves 3-peg Tower of Hanoi iteratively (non-optimal)
+ * Uses bit manipulation to determine moves
+ * @param {number} N - Number of disks
+ * @param {number} source - Source peg index
+ * @param {number} dest - Destination peg index
+ * @param {number} aux - Auxiliary peg index
+ * @param {Array} moves - Array to store moves
+ */
 export const solveHanoi3PegsIterative = (N, source, dest, aux, moves) => {
   if (N <= 0) return;
 
@@ -72,7 +123,15 @@ export const solveHanoi3PegsIterative = (N, source, dest, aux, moves) => {
   }
 };
 
-// --- 4-Peg Frame-Stewart Solver (unchanged logic – already correct) ---
+/**
+ * Solves 4-peg Tower of Hanoi using Frame-Stewart algorithm (optimal)
+ * @param {number} n - Number of disks
+ * @param {number} from - Source peg index
+ * @param {number} to - Destination peg index
+ * @param {Array} aux - Array of two auxiliary peg indices
+ * @param {Array} moves - Array to store moves
+ * @param {number} offset - Disk numbering offset
+ */
 export const solveHanoi4PegsFrameStewart = (
   n,
   from,
@@ -97,18 +156,19 @@ export const solveHanoi4PegsFrameStewart = (
   solveHanoi4PegsFrameStewart(k, aux1, to, [aux2, from], moves, offset);
 };
 
-// --- 4-Peg Iterative Solver (FIXED – VALID NON-OPTIMAL) ---
+/**
+ * Solves 4-peg Tower of Hanoi iteratively (non-optimal)
+ * Strategy: Move N-2 disks to aux1, then move largest two disks, then move N-2 disks to destination
+ * @param {number} N - Number of disks
+ * @param {number} source - Source peg index
+ * @param {number} dest - Destination peg index
+ * @param {Array} aux - Array of two auxiliary peg indices
+ * @param {Array} moves - Array to store moves
+ */
 export const solveHanoi4PegsIterative = (N, source, dest, aux, moves) => {
   if (N <= 0) return;
 
   const [aux1, aux2] = aux;
-
-  // Strategy:
-  // 1. Move N-2 disks to aux1 (3-peg iterative)
-  // 2. Move disk N-1 to aux2
-  // 3. Move disk N to dest
-  // 4. Move disk N-1 from aux2 to dest
-  // 5. Move N-2 disks from aux1 to dest
 
   if (N === 1) {
     moves.push({ from: source, to: dest, disk: 1 });
@@ -131,7 +191,10 @@ export const solveHanoi4PegsIterative = (N, source, dest, aux, moves) => {
   solveHanoi3PegsIterative(N - 2, aux1, dest, source, moves);
 };
 
-// --- API Integration ---
+/**
+ * Fetches leaderboard scores from the API
+ * @returns {Promise<Array>} Array of leaderboard entries
+ */
 export const fetchLeaderboard = async () => {
   try {
     const res = await fetch("/api/hanoi/scores", { cache: "no-store" });
@@ -144,6 +207,11 @@ export const fetchLeaderboard = async () => {
   }
 };
 
+/**
+ * Posts a score to the leaderboard API
+ * @param {Object} scoreData - Score data to post
+ * @returns {Promise<boolean>} True if successful
+ */
 export const postScore = async (scoreData) => {
   try {
     const res = await fetch("/api/hanoi/scores", {

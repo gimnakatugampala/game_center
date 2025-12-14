@@ -18,15 +18,16 @@ const GameCenterDashboard = () => {
       implemented: true,
     },
     {
-      id: 'traffic',
-      title: 'Traffic Simulation',
-      icon: '🚦',
-      description: 'Calculate maximum flow using Ford-Fulkerson and Edmonds-Karp',
-      color: 'from-green-500 to-emerald-500',
-      complexity: 'Network Flow',
-      algorithms: ['Ford-Fulkerson', 'Edmonds-Karp'],
-      route: '/games/tsg',
-      implemented: true
+      id: "traffic",
+      title: "Traffic Simulation",
+      icon: "🚦",
+      description:
+        "Calculate maximum flow using Ford-Fulkerson and Edmonds-Karp",
+      color: "from-green-500 to-emerald-500",
+      complexity: "Network Flow",
+      algorithms: ["Ford-Fulkerson", "Edmonds-Karp"],
+      route: "/games/tsg",
+      implemented: true,
     },
     {
       id: "tsp",

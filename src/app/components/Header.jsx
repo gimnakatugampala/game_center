@@ -2,21 +2,20 @@
 import Link from "next/link";
 import { useState } from "react";
 
+/**
+ * Header component with navigation menu
+ * Includes responsive mobile menu toggle and navigation links
+ */
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <header className="bg-gradient-to-br from-[#0f0f1e] via-[#1a1a2e] to-[#16213e] backdrop-blur-sm shadow-lg sticky top-0 z-50">
       <nav className="container mx-auto flex justify-between items-center py-4 px-6 md:px-10">
-        {/* Logo */}
         <div className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-500 to-pink-500 tracking-wide">
-          <a href="/">
-
-          Game Center
-          </a>
+          <a href="/">Game Center</a>
         </div>
 
-        {/* Desktop Menu */}
         <ul className="hidden md:flex space-x-8 text-gray-300 font-medium">
           <li>
             <Link
@@ -39,7 +38,6 @@ export default function Header() {
           </li>
         </ul>
 
-        {/* Mobile Menu Button */}
         <button
           className="md:hidden text-gray-300 hover:text-white transition-colors duration-200 text-2xl"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -49,7 +47,6 @@ export default function Header() {
         </button>
       </nav>
 
-      {/* Mobile Menu */}
       <div
         className={`md:hidden overflow-hidden transition-all duration-300 ${
           isMenuOpen ? "max-h-64" : "max-h-0"

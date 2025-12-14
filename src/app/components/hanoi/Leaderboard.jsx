@@ -3,7 +3,11 @@
 import React, { useEffect, useState } from "react";
 import MoveStepsCard from "./MovesCard";
 
-// --- Format time ---
+/**
+ * Formats milliseconds into human-readable time string (minutes and seconds)
+ * @param {number} ms - Time in milliseconds
+ * @returns {string} Formatted time string (e.g., "5m 30s") or "-" if invalid
+ */
 const formatTime = (ms) => {
   if (!ms) return "-";
   const totalSeconds = Math.floor(ms / 1000);
@@ -12,11 +16,19 @@ const formatTime = (ms) => {
   return `${minutes}m ${seconds}s`;
 };
 
+/**
+ * Leaderboard component displaying top 10 scores
+ * Fetches scores from API and displays them sorted by disks (desc), moves (asc), time (asc)
+ */
 const Leaderboard = () => {
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  /**
+   * Fetches leaderboard data from API and processes scores
+   * Sorts by: disks (descending), then moves (ascending), then time (ascending)
+   */
   const fetchLeaderboard = async () => {
     setLoading(true);
     setError(null);
@@ -39,7 +51,6 @@ const Leaderboard = () => {
         steps: s.steps ? JSON.parse(s.steps) : [],
       }));
 
-      // sort: disks desc, moves asc, time asc
       scores.sort((a, b) => {
         if (a.disks !== b.disks) return b.disks - a.disks;
         if (a.totalMoves !== b.totalMoves) return a.totalMoves - b.totalMoves;
