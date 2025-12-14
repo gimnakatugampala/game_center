@@ -8,6 +8,14 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
+export const metadata = {
+  title: "Game Center",
+  description: "Algorithm Learning Games",
+  icons: {
+    icon: "/favicon.ico",
+  },
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className="dark">
