@@ -2,6 +2,19 @@
 
 import React from "react";
 
+/**
+ * Displays game status, move count, and solver controls
+ * @param {number} N - Number of disks
+ * @param {number} P - Number of pegs
+ * @param {number} moveCount - Current number of moves made
+ * @param {number} optimalMoves - Optimal number of moves
+ * @param {string} gameStatus - Current game status
+ * @param {number} currentMoveIndex - Current move index in solution
+ * @param {Array} solutionMoves - Array of solution moves
+ * @param {Function} generateSolution - Callback to start auto-solving
+ * @param {boolean} isAutoSolving - Whether auto-solver is active
+ * @param {number} solverTimeMs - Solver execution time in milliseconds
+ */
 const StatusAndSolver = ({
   N,
   P,
@@ -26,7 +39,6 @@ const StatusAndSolver = ({
       </h3>
 
       <div className="grid grid-cols-2 gap-4">
-        {/* Disks / Pegs */}
         <div className="bg-gray-800/70 p-4 rounded-2xl shadow-md flex flex-col items-center justify-center transition-transform transform hover:scale-105">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
             Disks / Pegs
@@ -36,7 +48,6 @@ const StatusAndSolver = ({
           </p>
         </div>
 
-        {/* User Moves */}
         <div className="bg-gray-800/70 p-4 rounded-2xl shadow-md flex flex-col items-center justify-center transition-transform transform hover:scale-105">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
             User Moves
@@ -44,8 +55,7 @@ const StatusAndSolver = ({
           <p className="text-2xl font-bold text-yellow-400">{moveCount}</p>
         </div>
       </div>
-  
-      {/* Optimal Moves */}
+
       <div className="bg-gray-800/70 p-4 rounded-2xl shadow-md flex flex-col items-center justify-center transition-transform transform hover:scale-105">
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
           Optimal Moves (Target)
@@ -53,7 +63,6 @@ const StatusAndSolver = ({
         <p className="text-xl font-bold text-green-400">{optimalMoves}</p>
       </div>
 
-      {/* Solve Button */}
       {gameStatus === "PLAYING" && (
         <button
           onClick={generateSolution}
@@ -68,7 +77,6 @@ const StatusAndSolver = ({
         </button>
       )}
 
-      {/* Auto-Solving Progress */}
       {isAutoSolving && (
         <div className="mt-4 space-y-3">
           <p className="text-sm font-semibold text-purple-400 flex justify-between">

@@ -11,6 +11,28 @@ import {
 import GameDescription from "./gameDescription";
 import InstructionsCard from "./InstructionCard";
 
+/**
+ * Setup panel component for Tower of Hanoi game configuration
+ * Allows users to configure game parameters: player name, pegs, disks, time limit, and solver algorithm
+ * @param {string} playerName - Current player name
+ * @param {Function} setPlayerName - Function to update player name
+ * @param {number} P - Number of pegs
+ * @param {Function} setP - Function to update number of pegs
+ * @param {number} N - Number of disks
+ * @param {Function} setN - Function to update number of disks
+ * @param {string} gameStatus - Current game status
+ * @param {Function} handleSetupGame - Function to start a new game
+ * @param {string} selectedAlgorithm3P - Selected algorithm for 3-peg mode
+ * @param {Function} setSelectedAlgorithm3P - Function to update 3-peg algorithm
+ * @param {string} selectedAlgorithm4P - Selected algorithm for 4-peg mode
+ * @param {Function} setSelectedAlgorithm4P - Function to update 4-peg algorithm
+ * @param {number} timeLimit - Time limit in seconds
+ * @param {Function} setTimeLimit - Function to update time limit
+ * @param {Array} solutionMoves - Array of solution moves
+ * @param {Function} resetGame - Function to reset the game
+ * @param {number} MIN_TIME - Minimum time limit (default: 30)
+ * @param {number} MAX_TIME - Maximum time limit (default: 600)
+ */
 const SetupPanel = ({
   playerName,
   setPlayerName,
@@ -34,7 +56,9 @@ const SetupPanel = ({
   const isSetup = gameStatus === "SETUP";
   const [useRandomN, setUseRandomN] = useState(true);
 
-  // Initialize N randomly only if Random mode is ON
+  /**
+   * Automatically generates random number of disks (5-10) when random mode is enabled
+   */
   useEffect(() => {
     if (useRandomN && isSetup) {
       const randomValue = Math.floor(Math.random() * 6) + 5;
@@ -42,6 +66,9 @@ const SetupPanel = ({
     }
   }, [useRandomN, setN, isSetup]);
 
+  /**
+   * Determines which algorithm options to display based on number of pegs
+   */
   const currentAlgorithmOptions =
     P === 3 ? ALGORITHM_OPTIONS_3P : ALGORITHM_OPTIONS_4P;
   const currentSelectedAlgorithm =
@@ -49,7 +76,9 @@ const SetupPanel = ({
   const setSelectedAlgorithm =
     P === 3 ? setSelectedAlgorithm3P : setSelectedAlgorithm4P;
 
-  // Set default algorithm if none selected
+  /**
+   * Sets default algorithm when pegs change or no algorithm is selected
+   */
   useEffect(() => {
     if (P === 3 && !selectedAlgorithm3P)
       setSelectedAlgorithm3P(ALGORITHM_OPTIONS_3P.RECURSIVE);
@@ -63,6 +92,10 @@ const SetupPanel = ({
     setSelectedAlgorithm4P,
   ]);
 
+  /**
+   * Determines if strict (optimal) algorithm mode is selected
+   * Strict mode uses recursive/Frame-Stewart algorithms that guarantee optimal solutions
+   */
   const isStrictAlgorithmMode = useMemo(() => {
     return (
       (P === 3 && selectedAlgorithm3P === ALGORITHM_OPTIONS_3P.RECURSIVE) ||

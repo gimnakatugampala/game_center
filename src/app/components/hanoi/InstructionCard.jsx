@@ -2,6 +2,9 @@
 
 import React from "react";
 
+/**
+ * Displays game instructions for Tower of Hanoi
+ */
 const InstructionsCard = () => {
   return (
     <div className="bg-gray-800 border border-gray-700 rounded-3xl p-6 shadow-lg space-y-4 mt-4">

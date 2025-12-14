@@ -5,7 +5,12 @@ import {
   solveHanoi4PegsIterative,
 } from "../../app/components/hanoi/hanoi-utils";
 
-// Helper: measure execution time with optional iterations
+/**
+ * Measures execution time of a function with optional iterations
+ * @param {Function} fn - Function to measure
+ * @param {number} iterations - Number of times to run the function
+ * @returns {number} Total execution time in milliseconds
+ */
 const measureTime = (fn, iterations = 1) => {
   const start = performance.now();
   for (let i = 0; i < iterations; i++) fn();
@@ -14,11 +19,7 @@ const measureTime = (fn, iterations = 1) => {
 };
 
 describe("Hanoi Solver Performance Tests", () => {
-  jest.setTimeout(30000); // allow enough time for larger N
-
-  // --------------------------------------------------------
-  // 3-Peg Performance Comparison
-  // --------------------------------------------------------
+  jest.setTimeout(30000);
   describe("3-Peg Solvers Performance", () => {
     const testCases = [5, 8, 10];
 
@@ -29,7 +30,7 @@ describe("Hanoi Solver Performance Tests", () => {
 
         const recursiveTime = measureTime(
           () => solveHanoi3PegsRecursive(N, 0, 2, 1, recursiveMoves),
-          10 // run 10 times to get measurable time
+          10
         );
 
         const iterativeTime = measureTime(
@@ -49,9 +50,6 @@ describe("Hanoi Solver Performance Tests", () => {
     });
   });
 
-  // --------------------------------------------------------
-  // 4-Peg Performance Comparison
-  // --------------------------------------------------------
   describe("4-Peg Solvers Performance", () => {
     const testCases = [5, 8, 10];
 
@@ -82,9 +80,6 @@ describe("Hanoi Solver Performance Tests", () => {
     });
   });
 
-  // --------------------------------------------------------
-  // Stress Test (Optional – Coursework Bonus)
-  // --------------------------------------------------------
   test("Stress Test: Large N (3-Peg Iterative)", () => {
     const N = 12;
     const moves = [];
@@ -95,7 +90,6 @@ describe("Hanoi Solver Performance Tests", () => {
       `Stress Test | 3-Pegs Iterative | N=${N} | Time=${time.toFixed(2)} ms`
     );
 
-    expect(moves.length).toBeGreaterThan(0); // still important
-    // Removed: expect(time).toBeGreaterThan(0);
+    expect(moves.length).toBeGreaterThan(0);
   });
 });

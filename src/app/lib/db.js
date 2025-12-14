@@ -1,11 +1,12 @@
-// lib/db.js
 import mysql from "mysql2/promise";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-// --- Create a connection pool ---
-// Local
+/**
+ * MySQL connection pool for database operations
+ * Uses environment variables for configuration
+ */
 const pool = mysql.createPool({
   host: process.env.DB_HOST || "localhost",
   user: process.env.DB_USER || "root",
@@ -17,19 +18,12 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
-// Pro
-// const pool = mysql.createPool({
-//   host: process.env.DB_HOST || "localhost",
-//   user: process.env.DB_USER || "autovnph_root",
-//   password: process.env.DB_PASSWORD || "FS8qiqfeIkwQ",
-//   database: process.env.DB_NAME || "autovnph_game_center",
-//   port: Number(process.env.DB_PORT) || 3306,
-//   waitForConnections: true,
-//   connectionLimit: 10,
-//   queueLimit: 0,
-// });
-
-// --- Execute a query with parameters (INSERT, UPDATE, DELETE) ---
+/**
+ * Executes a parameterized query (INSERT, UPDATE, DELETE)
+ * @param {string} query - SQL query string
+ * @param {Array} params - Query parameters
+ * @returns {Promise<Object>} Query results
+ */
 async function execute(query, params = []) {
   try {
     const [results] = await pool.execute(query, params);
@@ -40,7 +34,12 @@ async function execute(query, params = []) {
   }
 }
 
-// --- Query rows (SELECT) ---
+/**
+ * Queries the database and returns rows (SELECT)
+ * @param {string} sql - SQL query string
+ * @param {Array} params - Query parameters
+ * @returns {Promise<Array>} Array of rows
+ */
 async function query(sql, params = []) {
   try {
     const [rows] = await pool.query(sql, params);
@@ -51,7 +50,10 @@ async function query(sql, params = []) {
   }
 }
 
-// --- Test database connection ---
+/**
+ * Tests the database connection
+ * @returns {Promise<boolean>} True if connection successful
+ */
 async function testConnection() {
   try {
     const connection = await pool.getConnection();
@@ -69,7 +71,6 @@ async function testConnection() {
   }
 }
 
-// --- Export ---
 const db = {
   execute,
   query,

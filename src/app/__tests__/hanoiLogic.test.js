@@ -9,9 +9,10 @@ import {
   solveHanoi4PegsIterative,
 } from "../../app/components/hanoi/hanoi-utils";
 
-/* --------------------------------------------------------
-   Utility: verify final configuration (strict)
--------------------------------------------------------- */
+/**
+ * Verifies final configuration using strict validation
+ * Ensures all moves are valid and final state matches expected configuration
+ */
 const verifyFinalState = (N, moves, P) => {
   let pegs = initializePegs(N, P);
 
@@ -28,27 +29,22 @@ const verifyFinalState = (N, moves, P) => {
     if (i !== destination) expect(pegs[i]).toEqual([]);
 };
 
-/* --------------------------------------------------------
-   Utility: verify final configuration (heuristic / iterative)
--------------------------------------------------------- */
+/**
+ * Verifies final configuration using heuristic validation
+ * Checks that all disks are present without strict ordering requirements
+ */
 const verifyFinalStateHeuristic = (N, moves, P) => {
   let pegs = initializePegs(N, P);
 
-  // Apply all moves
   for (const move of moves) {
     const disk = pegs[move.from].pop();
     pegs[move.to].push(disk);
   }
-
-  // Flatten all pegs and check all disks are present exactly once
   const allDisks = pegs.flat();
   const expectedDisks = [...Array(N)].map((_, i) => i + 1);
   expect(allDisks.sort((a, b) => a - b)).toEqual(expectedDisks);
 };
 
-/* --------------------------------------------------------
-   initializePegs Tests
--------------------------------------------------------- */
 describe("initializePegs", () => {
   test("initializes 3 pegs with correct disk order", () => {
     const pegs = initializePegs(3, 3);
@@ -68,9 +64,6 @@ describe("initializePegs", () => {
   });
 });
 
-/* --------------------------------------------------------
-   isMoveValid Tests
--------------------------------------------------------- */
 describe("isMoveValid", () => {
   const pegs = [[3, 2, 1], [], []];
 
@@ -93,9 +86,6 @@ describe("isMoveValid", () => {
   });
 });
 
-/* --------------------------------------------------------
-   Optimal Moves
--------------------------------------------------------- */
 describe("Optimal move counts", () => {
   test("minMoves3Pegs returns 2^N - 1", () => {
     expect(minMoves3Pegs(3)).toBe(7);
@@ -106,9 +96,6 @@ describe("Optimal move counts", () => {
   });
 });
 
-/* --------------------------------------------------------
-   3-Peg Solver - Recursive
--------------------------------------------------------- */
 describe("3-Peg Solver - Recursive", () => {
   test("produces optimal valid solution", () => {
     const N = 4;
@@ -123,9 +110,6 @@ describe("3-Peg Solver - Recursive", () => {
   });
 });
 
-/* --------------------------------------------------------
-   3-Peg Solver - Iterative
--------------------------------------------------------- */
 describe("3-Peg Solver - Iterative", () => {
   test("produces valid final state", () => {
     const N = 4;
@@ -136,14 +120,10 @@ describe("3-Peg Solver - Iterative", () => {
     console.log(`3-Peg Iterative solver time: ${(end - start).toFixed(2)} ms`);
 
     expect(moves.length).toBeGreaterThan(0);
-    // Use heuristic verification for non-optimal iterative
     verifyFinalStateHeuristic(N, moves, 3);
   });
 });
 
-/* --------------------------------------------------------
-   4-Peg Solver - Frame-Stewart
--------------------------------------------------------- */
 describe("4-Peg Solver - Frame-Stewart", () => {
   test("N=4 produces valid final state", () => {
     const moves = [];
@@ -170,9 +150,6 @@ describe("4-Peg Solver - Frame-Stewart", () => {
   });
 });
 
-/* --------------------------------------------------------
-   4-Peg Solver - Iterative (Heuristic)
--------------------------------------------------------- */
 describe("4-Peg Solver - Iterative", () => {
   test("produces valid final state", () => {
     const N = 4;

@@ -1,33 +1,43 @@
-// src/app/lib/maxFlowAlgorithms.js
-
-// Generate random capacities for the traffic network
+/**
+ * Generates random edge capacities for the traffic network graph
+ * @returns {Object} Object with edge capacities between 5 and 15
+ */
 export function generateRandomCapacities() {
   const capacities = {};
   const edges = [
-    'A->B', 'A->C', 'A->D',
-    'B->E', 'B->F',
-    'C->E', 'C->F',
-    'D->F',
-    'E->G', 'E->H',
-    'F->H',
-    'G->T', 'H->T'
+    "A->B",
+    "A->C",
+    "A->D",
+    "B->E",
+    "B->F",
+    "C->E",
+    "C->F",
+    "D->F",
+    "E->G",
+    "E->H",
+    "F->H",
+    "G->T",
+    "H->T",
   ];
 
-  edges.forEach(edge => {
-    // Generate random capacity between 5 and 15
+  edges.forEach((edge) => {
     capacities[edge] = Math.floor(Math.random() * 11) + 5;
   });
 
   return capacities;
 }
 
-// Create graph structure from capacities
+/**
+ * Creates a graph structure from edge capacities
+ * @param {Object} capacities - Object mapping edges to capacities
+ * @returns {Object} Graph structure with nodes and edges
+ */
 export function createGraphFromCapacities(capacities) {
   const graph = {};
 
   for (const [edge, capacity] of Object.entries(capacities)) {
-    const [from, to] = edge.split('->');
-    
+    const [from, to] = edge.split("->");
+
     if (!graph[from]) {
       graph[from] = {};
     }
@@ -37,11 +47,16 @@ export function createGraphFromCapacities(capacities) {
   return graph;
 }
 
-// Ford-Fulkerson algorithm (DFS-based)
+/**
+ * Ford-Fulkerson algorithm for finding maximum flow (DFS-based)
+ * @param {Object} graph - Graph structure
+ * @param {string} source - Source node
+ * @param {string} sink - Sink node
+ * @returns {Object} Maximum flow and execution time
+ */
 export function fordFulkerson(graph, source, sink) {
   const startTime = performance.now();
-  
-  // Create residual graph
+
   const residual = {};
   for (const node in graph) {
     residual[node] = { ...graph[node] };
@@ -50,7 +65,13 @@ export function fordFulkerson(graph, source, sink) {
   let maxFlow = 0;
   let path = [];
 
-  // DFS to find augmenting path
+  /**
+   * Depth-first search to find augmenting path
+   * @param {string} current - Current node
+   * @param {Set} visited - Set of visited nodes
+   * @param {Array} pathSoFar - Current path
+   * @returns {boolean} True if path to sink found
+   */
   function dfs(current, visited, pathSoFar) {
     if (current === sink) {
       path = [...pathSoFar];
@@ -62,7 +83,12 @@ export function fordFulkerson(graph, source, sink) {
     const neighbors = residual[current] || {};
     for (const neighbor in neighbors) {
       if (!visited.has(neighbor) && neighbors[neighbor] > 0) {
-        if (dfs(neighbor, visited, [...pathSoFar, { from: current, to: neighbor }])) {
+        if (
+          dfs(neighbor, visited, [
+            ...pathSoFar,
+            { from: current, to: neighbor },
+          ])
+        ) {
           return true;
         }
       }
@@ -71,28 +97,26 @@ export function fordFulkerson(graph, source, sink) {
     return false;
   }
 
-  // Find augmenting paths and update flow
   while (true) {
     const visited = new Set();
     path = [];
-    
+
     if (!dfs(source, visited, [])) {
       break;
     }
 
-    // Find minimum capacity in the path
     let minCapacity = Infinity;
     for (const edge of path) {
       minCapacity = Math.min(minCapacity, residual[edge.from][edge.to]);
     }
 
-    // Update residual graph
     for (const edge of path) {
       residual[edge.from][edge.to] -= minCapacity;
       if (!residual[edge.to]) {
         residual[edge.to] = {};
       }
-      residual[edge.to][edge.from] = (residual[edge.to][edge.from] || 0) + minCapacity;
+      residual[edge.to][edge.from] =
+        (residual[edge.to][edge.from] || 0) + minCapacity;
     }
 
     maxFlow += minCapacity;
@@ -101,15 +125,21 @@ export function fordFulkerson(graph, source, sink) {
   const endTime = performance.now();
   return {
     maxFlow,
-    executionTime: endTime - startTime
+    executionTime: endTime - startTime,
   };
 }
 
-// Edmonds-Karp algorithm (BFS-based)
+/**
+ * Edmonds-Karp algorithm for finding maximum flow (BFS-based)
+ * Uses breadth-first search to find shortest augmenting paths
+ * @param {Object} graph - Graph structure
+ * @param {string} source - Source node
+ * @param {string} sink - Sink node
+ * @returns {Object} Maximum flow and execution time
+ */
 export function edmondsKarp(graph, source, sink) {
   const startTime = performance.now();
-  
-  // Create residual graph
+
   const residual = {};
   for (const node in graph) {
     residual[node] = { ...graph[node] };
@@ -117,7 +147,10 @@ export function edmondsKarp(graph, source, sink) {
 
   let maxFlow = 0;
 
-  // BFS to find shortest augmenting path
+  /**
+   * Breadth-first search to find shortest augmenting path
+   * @returns {boolean} True if augmenting path found
+   */
   function bfs() {
     const queue = [source];
     const parent = {};
@@ -134,7 +167,6 @@ export function edmondsKarp(graph, source, sink) {
           queue.push(neighbor);
 
           if (neighbor === sink) {
-            // Reconstruct path
             const path = [];
             let node = sink;
             while (node !== source) {
@@ -143,19 +175,18 @@ export function edmondsKarp(graph, source, sink) {
               node = prev;
             }
 
-            // Find minimum capacity
             let minCapacity = Infinity;
             for (const edge of path) {
               minCapacity = Math.min(minCapacity, residual[edge.from][edge.to]);
             }
 
-            // Update residual graph
             for (const edge of path) {
               residual[edge.from][edge.to] -= minCapacity;
               if (!residual[edge.to]) {
                 residual[edge.to] = {};
               }
-              residual[edge.to][edge.from] = (residual[edge.to][edge.from] || 0) + minCapacity;
+              residual[edge.to][edge.from] =
+                (residual[edge.to][edge.from] || 0) + minCapacity;
             }
 
             maxFlow += minCapacity;
@@ -168,15 +199,11 @@ export function edmondsKarp(graph, source, sink) {
     return false;
   }
 
-  // Find augmenting paths
-  while (bfs()) {
-    // Continue until no more augmenting paths
-  }
+  while (bfs()) {}
 
   const endTime = performance.now();
   return {
     maxFlow,
-    executionTime: endTime - startTime
+    executionTime: endTime - startTime,
   };
 }
-

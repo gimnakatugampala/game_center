@@ -5,7 +5,11 @@ import {
   solveHanoi4PegsIterative,
 } from "../../app/components/hanoi/hanoi-utils";
 
-// Helper: measure execution time
+/**
+ * Measures execution time of a function
+ * @param {Function} fn - Function to measure
+ * @returns {number} Execution time in milliseconds
+ */
 const measureTime = (fn) => {
   const start = performance.now();
   fn();
@@ -13,17 +17,22 @@ const measureTime = (fn) => {
   return end - start;
 };
 
-// Helper: get random integer between min and max inclusive
+/**
+ * Generates a random integer between min and max (inclusive)
+ * @param {number} min - Minimum value
+ * @param {number} max - Maximum value
+ * @returns {number} Random integer
+ */
 const randomInt = (min, max) =>
   Math.floor(Math.random() * (max - min + 1)) + min;
 
 describe("Hanoi Solver Performance - 15 Rounds Random Disks", () => {
-  jest.setTimeout(60000); // allow enough time
+  jest.setTimeout(60000);
 
   const rounds = 15;
 
   for (let round = 1; round <= rounds; round++) {
-    const N = randomInt(5, 10); // random disks 5-10
+    const N = randomInt(5, 10);
 
     test(`Round ${round} | Random N=${N}`, () => {
       const moves3Rec = [];
@@ -55,7 +64,6 @@ describe("Hanoi Solver Performance - 15 Rounds Random Disks", () => {
         )}ms | 4-Iter: ${time4Iter.toFixed(2)}ms`
       );
 
-      // Verify moves exist
       expect(moves3Rec.length).toBeGreaterThan(0);
       expect(moves3Iter.length).toBeGreaterThan(0);
       expect(moves4FS.length).toBeGreaterThan(0);
