@@ -2,7 +2,6 @@
 
 import React from "react";
 
-
 const StatusAndSolver = ({
   N,
   P,
@@ -13,6 +12,8 @@ const StatusAndSolver = ({
   solutionMoves,
   generateSolution,
   isAutoSolving,
+  autoPlaySpeed,
+  setAutoPlaySpeed,
 }) => {
   const progressPercent =
     solutionMoves.length > 0
@@ -83,18 +84,6 @@ const StatusAndSolver = ({
           </div>
           <p className="text-xs text-gray-400 text-center">
             {currentMoveIndex} of {solutionMoves.length} steps complete
-          </p>
-        </div>
-      )}
-
-      {/* Game Won */}
-      {gameStatus === "WON" && (
-        <div className="p-4 bg-green-900/60 rounded-2xl shadow-inner text-center">
-          <p className="text-xl font-extrabold text-green-400 tracking-wide">
-            🎉 GAME WON!
-          </p>
-          <p className="text-sm text-green-200 mt-1">
-            Score submitted to leaderboard.
           </p>
         </div>
       )}

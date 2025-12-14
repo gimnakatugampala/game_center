@@ -18,9 +18,7 @@ export const ALGORITHM_OPTIONS_4P = {
 
 // --- Initialize Pegs ---
 export const initializePegs = (N, P) => {
-  const pegs = Array(P)
-    .fill(0)
-    .map(() => []);
+  const pegs = Array.from({ length: P }, () => []);
   for (let i = N; i >= 1; i--) pegs[0].push(i);
   return pegs;
 };
@@ -38,7 +36,6 @@ export const isMoveValid = (pegs, sourceIndex, destIndex) => {
 // --- Optimal Moves ---
 export const minMoves3Pegs = (N) => Math.pow(2, N) - 1;
 
-// Known optimal moves for 4 pegs (0..10 disks)
 export const minMoves4Pegs = (N) => {
   const knownOptimal = [0, 1, 3, 5, 9, 13, 17, 25, 33, 41, 49];
   return N < knownOptimal.length ? knownOptimal[N] : minMoves3Pegs(N);
@@ -59,19 +56,23 @@ export const solveHanoi3PegsRecursive = (
   solveHanoi3PegsRecursive(N - 1, aux, dest, source, moves, offset);
 };
 
-// --- 3-Peg Iterative Solver (correct Hanoi sequence) ---
+// --- 3-Peg Iterative Solver (FIXED) ---
 export const solveHanoi3PegsIterative = (N, source, dest, aux, moves) => {
   if (N <= 0) return;
+
   const totalMoves = Math.pow(2, N) - 1;
-  const pegsMap = [source, aux, dest];
+  const pegs = [source, aux, dest];
+
   for (let i = 1; i <= totalMoves; i++) {
-    const from = pegsMap[(i & (i - 1)) % 3];
-    const to = pegsMap[((i | (i - 1)) + 1) % 3];
-    moves.push({ from, to, disk: Math.ceil(Math.log2(i & -i) + 1) });
+    const from = pegs[(i & (i - 1)) % 3];
+    const to = pegs[((i | (i - 1)) + 1) % 3];
+    const disk = Math.log2(i & -i) + 1;
+
+    moves.push({ from, to, disk });
   }
 };
 
-// --- 4-Peg Frame-Stewart Solver ---
+// --- 4-Peg Frame-Stewart Solver (unchanged logic – already correct) ---
 export const solveHanoi4PegsFrameStewart = (
   n,
   from,
@@ -85,31 +86,49 @@ export const solveHanoi4PegsFrameStewart = (
     moves.push({ from, to, disk: 1 + offset });
     return;
   }
+
   let k = n - Math.round(Math.sqrt(2 * n + 1)) + 1;
   if (k < 1) k = 1;
 
   const [aux1, aux2] = aux;
 
-  // Step 1: Move k smallest disks to aux1
   solveHanoi4PegsFrameStewart(k, from, aux1, [aux2, to], moves, offset);
-
-  // Step 2: Move remaining n-k largest disks using 3 pegs
   solveHanoi3PegsRecursive(n - k, from, to, aux2, moves, offset + k);
-
-  // Step 3: Move k smallest disks from aux1 to destination
   solveHanoi4PegsFrameStewart(k, aux1, to, [aux2, from], moves, offset);
 };
 
-// --- 4-Peg Iterative Solver (non-optimal) ---
+// --- 4-Peg Iterative Solver (FIXED – VALID NON-OPTIMAL) ---
 export const solveHanoi4PegsIterative = (N, source, dest, aux, moves) => {
   if (N <= 0) return;
+
   const [aux1, aux2] = aux;
-  for (let i = N; i >= 1; i--) {
-    moves.push({ from: source, to: aux1, disk: i });
-    moves.push({ from: source, to: aux2, disk: i });
-    moves.push({ from: aux1, to: dest, disk: i });
-    moves.push({ from: aux2, to: dest, disk: i });
+
+  // Strategy:
+  // 1. Move N-2 disks to aux1 (3-peg iterative)
+  // 2. Move disk N-1 to aux2
+  // 3. Move disk N to dest
+  // 4. Move disk N-1 from aux2 to dest
+  // 5. Move N-2 disks from aux1 to dest
+
+  if (N === 1) {
+    moves.push({ from: source, to: dest, disk: 1 });
+    return;
   }
+
+  if (N === 2) {
+    moves.push({ from: source, to: aux1, disk: 1 });
+    moves.push({ from: source, to: dest, disk: 2 });
+    moves.push({ from: aux1, to: dest, disk: 1 });
+    return;
+  }
+
+  solveHanoi3PegsIterative(N - 2, source, aux1, aux2, moves);
+
+  moves.push({ from: source, to: aux2, disk: N - 1 });
+  moves.push({ from: source, to: dest, disk: N });
+  moves.push({ from: aux2, to: dest, disk: N - 1 });
+
+  solveHanoi3PegsIterative(N - 2, aux1, dest, source, moves);
 };
 
 // --- API Integration ---

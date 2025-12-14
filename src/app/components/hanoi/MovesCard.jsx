@@ -1,33 +1,47 @@
 "use client";
+
 import React from "react";
 
-const pegLabels = ["A", "B", "C", "D"];
-
-export default function MovesCard({ moves = [] }) {
-  if (!moves || moves.length === 0)
-    return (
-      <div className="bg-gray-800 p-4 rounded-2xl text-gray-400 text-center">
-        No steps generated.
-      </div>
-    );
+const MovesCard = ({ userMoves, optimalMoves, isOptimal, mode = "MANUAL" }) => {
+  const isPartial = userMoves > optimalMoves;
 
   return (
-    <div className="bg-gray-800 p-4 rounded-3xl shadow-xl mt-6">
-      <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
-        {moves.map((m, index) => (
-          <div
-            key={index}
-            className="bg-gray-700 p-3 rounded-xl flex justify-between items-center"
-          >
-            <span className="text-gray-300 font-semibold">
-              Step {index + 1}
-            </span>
-            <span className="text-indigo-400 font-bold text-lg">
-              {pegLabels[m.from]} → {pegLabels[m.to]}
-            </span>
-          </div>
-        ))}
+    <div className="mt-6 p-6 rounded-3xl bg-slate-800/90 border border-slate-700 shadow-xl text-center animate-fadeIn">
+      <h3 className="text-2xl font-extrabold text-indigo-400 mb-4">
+        🧮 Game Summary
+      </h3>
+
+      <div className="grid grid-cols-2 gap-4 text-lg text-slate-200 mb-6">
+        <div className="bg-slate-900 rounded-xl p-4">
+          <p className="text-slate-400 text-sm mb-1">Your Moves</p>
+          <p className="text-3xl font-bold text-pink-400">{userMoves}</p>
+        </div>
+
+        <div className="bg-slate-900 rounded-xl p-4">
+          <p className="text-slate-400 text-sm mb-1">Optimal Moves</p>
+          <p className="text-3xl font-bold text-indigo-400">{optimalMoves}</p>
+        </div>
       </div>
+
+      {/* Result Badge */}
+      {isOptimal ? (
+        <div className="bg-green-500/20 border border-green-500/40 rounded-xl p-4 text-green-300 font-semibold text-lg">
+          🏆 Perfect! You solved the puzzle using the optimal number of moves.
+        </div>
+      ) : isPartial ? (
+        <div className="bg-yellow-500/20 border border-yellow-500/40 rounded-xl p-4 text-yellow-300 font-semibold text-lg">
+          ✅ Puzzle solved! You used more moves than the optimal solution, but
+          your solution is valid.
+        </div>
+      ) : null}
+
+      {/* Educational Hint */}
+      <p className="mt-4 text-slate-400 text-sm italic">
+        Optimal moves represent the minimum number of moves required to solve
+        the puzzle using an ideal algorithm.
+      </p>
     </div>
   );
-}
+};
+
+export default MovesCard;
