@@ -113,11 +113,12 @@ describe("3-Peg Solver - Recursive", () => {
 // 3-Peg Solver - Iterative
 // --------------------------------------------------------
 describe("3-Peg Solver - Iterative", () => {
-  test("iterative solver produces some moves", () => {
+  test("iterative solver produces valid final state", () => {
     const N = 4;
     const moves = [];
     solveHanoi3PegsIterative(N, 0, 2, 1, moves);
     expect(moves.length).toBeGreaterThan(0);
+    verifyFinalState(N, moves, 3);
   });
 });
 
@@ -146,88 +147,11 @@ describe("4-Peg Solver - Frame-Stewart", () => {
 // 4-Peg Solver - Iterative
 // --------------------------------------------------------
 describe("4-Peg Solver - Iterative", () => {
-  test("iterative solver produces some moves", () => {
+  test("iterative solver produces valid final state", () => {
     const N = 4;
     const moves = [];
     solveHanoi4PegsIterative(N, 0, 3, [1, 2], moves);
     expect(moves.length).toBeGreaterThan(0);
+    verifyFinalState(N, moves, 4);
   });
-});
-
-//
-// --------------------------------------------------------
-// Benchmark – 15 Rounds for All Algorithms
-// --------------------------------------------------------
-const ROUNDS = 15;
-const ITERATIONS = 1; // Keep 1 for heavy computations like 10-20 disks
-
-const benchmark = (label, solveFn, argsBuilder) => {
-  const timesTotal = [];
-
-  for (let i = 0; i < ROUNDS; i++) {
-    const N = Math.floor(Math.random() * (10 - 5 + 1)) + 5; // Random disks 5 - 10
-    const start = performance.now();
-
-    for (let j = 0; j < ITERATIONS; j++) {
-      const moves = []; // create new moves array every iteration
-      const args = argsBuilder(N, moves);
-      solveFn(...args);
-    }
-
-    const end = performance.now();
-    const total = end - start;
-    const avg = total / ITERATIONS;
-
-    timesTotal.push({ N, total, avg });
-  }
-
-  console.log(`\n=== ${label} ===`);
-  timesTotal.forEach(({ N, total, avg }, idx) => {
-    console.log(
-      `Round ${idx + 1} (N=${N}): total ${total.toFixed(
-        6
-      )} ms, avg per iteration ${avg.toFixed(6)} ms`
-    );
-  });
-
-  const avgTotal = timesTotal.reduce((sum, t) => sum + t.avg, 0) / ROUNDS;
-  console.log(
-    "Average time per iteration across all rounds:",
-    avgTotal.toFixed(6),
-    "ms\n"
-  );
-};
-
-test("Run 15 benchmarks for each algorithm", () => {
-  benchmark("3-Peg Recursive", solveHanoi3PegsRecursive, (N, moves) => [
-    N,
-    0,
-    2,
-    1,
-    moves,
-  ]);
-
-  benchmark("3-Peg Iterative", solveHanoi3PegsIterative, (N, moves) => [
-    N,
-    0,
-    2,
-    1,
-    moves,
-  ]);
-
-  benchmark("4-Peg Frame-Stewart", solveHanoi4PegsFrameStewart, (N, moves) => [
-    N,
-    0,
-    3,
-    [1, 2],
-    moves,
-  ]);
-
-  benchmark("4-Peg Iterative", solveHanoi4PegsIterative, (N, moves) => [
-    N,
-    0,
-    3,
-    [1, 2],
-    moves,
-  ]);
 });

@@ -46,6 +46,8 @@ const Page = () => {
   const [apiError, setApiError] = useState(null);
   const [error, setError] = useState("");
   const [moveError, setMoveError] = useState(null);
+  const [userMovesList, setUserMovesList] = useState([]);
+  const [optimalMovesList, setOptimalMovesList] = useState([]);
 
   const [selectedAlgorithm3P, setSelectedAlgorithm3P] = useState(
     ALGORITHM_OPTIONS_3P.RECURSIVE
@@ -63,13 +65,14 @@ const Page = () => {
   );
 
   const shouldShowTimer = useMemo(
-    () =>
-      gameStatus === "PLAYING" &&
-      !isAutoSolving &&
-      isStrictAlgorithmMode &&
-      isTimerActive,
-    [gameStatus, isAutoSolving, isStrictAlgorithmMode, isTimerActive]
+    () => gameStatus === "PLAYING" && !isAutoSolving && isTimerActive,
+    [gameStatus, isAutoSolving, isTimerActive]
   );
+
+  const pegLetters = useMemo(() => {
+    const letters = ["A", "B", "C", "D"];
+    return letters.slice(0, P);
+  }, [P]);
 
   const targetMoves = useMemo(() => {
     if (solutionMoves.length > 0) return solutionMoves.length;
@@ -80,6 +83,23 @@ const Page = () => {
     () => pegs[P - 1]?.length === N && N > 0,
     [pegs, N, P]
   );
+
+  const isOptimalWin = useMemo(
+    () => gameStatus === "WON" && moveCount === targetMoves,
+    [gameStatus, moveCount, targetMoves]
+  );
+
+  const isPartialWin = useMemo(
+    () => gameStatus === "WON" && moveCount > targetMoves,
+    [gameStatus, moveCount, targetMoves]
+  );
+
+  const resultMessage = useMemo(() => {
+    if (isOptimalWin) return "🏆 Congratulations!";
+    if (isPartialWin)
+      return "✅ Puzzle solved! You used more moves than optimal, but well done!";
+    return "";
+  }, [isOptimalWin, isPartialWin]);
 
   /* -------------------- LEADERBOARD -------------------- */
   const loadLeaderboardData = useCallback(async () => {
@@ -131,7 +151,6 @@ const Page = () => {
       const from = selectedPeg;
       const to = pegIndex;
       setSelectedPeg(null);
-
       if (from === to) return;
 
       if (!isMoveValid(pegs, from, to)) {
@@ -141,38 +160,24 @@ const Page = () => {
         return;
       }
 
-      if (isStrictAlgorithmMode) {
-        const nextOptimalMove = solutionMoves[currentMoveIndex];
-        if (
-          !nextOptimalMove ||
-          nextOptimalMove.from !== from ||
-          nextOptimalMove.to !== to
-        ) {
-          setMoveError(
-            "⚠️ This move is not optimal for the selected algorithm."
-          );
-          return;
-        }
-        setCurrentMoveIndex((i) => i + 1);
-      }
-
       setMoveError(null);
+
+      // Move disk
       setPegs((prev) => {
         const copy = prev.map((p) => [...p]);
         copy[to].push(copy[from].pop());
         return copy;
       });
+
+      // Track move as letter notation
+      setUserMovesList((prev) => [
+        ...prev,
+        { from: pegLetters[from], to: pegLetters[to] },
+      ]);
+
       setMoveCount((c) => c + 1);
     },
-    [
-      pegs,
-      selectedPeg,
-      gameStatus,
-      isAutoSolving,
-      solutionMoves,
-      currentMoveIndex,
-      isStrictAlgorithmMode,
-    ]
+    [pegs, selectedPeg, gameStatus, isAutoSolving, pegLetters]
   );
 
   /* -------------------- SETUP GAME -------------------- */
@@ -201,22 +206,19 @@ const Page = () => {
     setSelectedPeg(null);
     setMoveError(null);
     setIsAutoSolving(false);
+    setOptimalMovesList(
+      moves.map((m) => ({ from: pegLetters[m.from], to: pegLetters[m.to] }))
+    );
 
-    if (strict) {
-      setIsTimerActive(true);
-      setRemainingTime(limit * 60);
-    } else {
-      setIsTimerActive(false);
-      setRemainingTime(null);
-    }
-
+    setIsTimerActive(true);
+    setRemainingTime(limit);
     setGameStatus("PLAYING");
     setStartTime(Date.now());
   };
 
   /* -------------------- AUTO SOLVE -------------------- */
   const generateSolution = () => {
-    if (solutionMoves.length === 0) return;
+    if (!solutionMoves.length) return;
     setPegs(initializePegs(N, P));
     setMoveCount(0);
     setCurrentMoveIndex(0);
@@ -224,8 +226,8 @@ const Page = () => {
     setMoveError(null);
     setIsAutoSolving(true);
     setGameStatus("SOLVING");
-    setRemainingTime(null);
     setIsTimerActive(false);
+    setRemainingTime(null);
   };
 
   useEffect(() => {
@@ -295,6 +297,8 @@ const Page = () => {
     setCurrentMoveIndex(0);
     setIsAutoSolving(false);
     setIsTimerActive(false);
+    setUserMovesList([]);
+    setOptimalMovesList([]);
     setGameState("setup");
   };
 
@@ -312,7 +316,7 @@ const Page = () => {
         </p>
       </header>
 
-      {/* Welcome */}
+      {/* Welcome Screen */}
       {gameState === "welcome" && (
         <div className="flex justify-center items-center min-h-[70vh] px-5 py-10">
           <div className="bg-slate-800/90 backdrop-blur-xl rounded-[30px] p-12 max-w-2xl w-full shadow-[0_30px_80px_rgba(0,0,0,0.6)] border-2 border-pink-500/30 text-center animate-fadeInUp">
@@ -344,9 +348,9 @@ const Page = () => {
                   setError("");
                 }}
                 placeholder="Your name..."
-                className="w-full px-6 py-4 border-3 border-pink-500/40 rounded-2xl bg-black/50 text-white text-xl text-center"
                 onKeyDown={(e) => e.key === "Enter" && handlePlayerNameSubmit()}
                 autoFocus
+                className="w-full px-6 py-4 border-3 border-pink-500/40 rounded-2xl bg-black/50 text-white text-xl text-center"
               />
             </div>
 
@@ -358,8 +362,8 @@ const Page = () => {
 
             <button
               onClick={handlePlayerNameSubmit}
-              className="w-full px-8 py-4 border-none rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xl font-bold cursor-pointer mt-6"
               disabled={!playerName.trim() || isLoading}
+              className="w-full px-8 py-4 border-none rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xl font-bold cursor-pointer mt-6"
             >
               {isLoading ? "⏳ Preparing Puzzle..." : "Start Challenge →"}
             </button>
@@ -369,94 +373,172 @@ const Page = () => {
 
       {/* Main Game */}
       {gameState !== "welcome" && (
-        <>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-            <SetupPanel
-              playerName={playerName}
-              setPlayerName={setPlayerName}
-              P={P}
-              setP={setP}
-              N={N}
-              setN={setN}
-              gameStatus={gameStatus}
-              handleSetupGame={handleSetupGame}
-              selectedAlgorithm3P={selectedAlgorithm3P}
-              setSelectedAlgorithm3P={setSelectedAlgorithm3P}
-              selectedAlgorithm4P={selectedAlgorithm4P}
-              setSelectedAlgorithm4P={setSelectedAlgorithm4P}
-              timeLimit={timeLimit}
-              setTimeLimit={setTimeLimit}
-            />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+          {/* Setup Panel */}
+          <SetupPanel
+            playerName={playerName}
+            setPlayerName={setPlayerName}
+            P={P}
+            setP={setP}
+            N={N}
+            setN={setN}
+            gameStatus={gameStatus}
+            handleSetupGame={handleSetupGame}
+            selectedAlgorithm3P={selectedAlgorithm3P}
+            setSelectedAlgorithm3P={setSelectedAlgorithm3P}
+            selectedAlgorithm4P={selectedAlgorithm4P}
+            setSelectedAlgorithm4P={setSelectedAlgorithm4P}
+            timeLimit={timeLimit}
+            setTimeLimit={setTimeLimit}
+          />
+          {gameStatus === "GAMEOVER" && remainingTime === 0 && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
+              <div className="bg-red-900/90 backdrop-blur-xl rounded-3xl p-10 max-w-lg w-full text-center shadow-2xl border-2 border-red-500/40 animate-fadeInUp">
+                <h2 className="text-4xl font-bold text-red-400 mb-4">
+                  ⏰ Time's Up!
+                </h2>
+                <p className="text-xl text-white mb-6">GAME OVER!</p>
+                <button
+                  onClick={resetGame}
+                  className="px-8 py-3 rounded-2xl bg-gradient-to-r from-red-500 to-pink-600 text-white font-bold text-lg shadow-lg hover:scale-105 transform transition-transform duration-300"
+                >
+                  🔄 Restart Game
+                </button>
+              </div>
+            </div>
+          )}
 
-            <div className="p-6 bg-gray-900 rounded-3xl shadow-2xl border border-gray-800 w-full max-w-lg mx-auto space-y-6">
-              {shouldShowTimer && remainingTime != null && (
-                <div className="text-lg font-semibold text-yellow-400 animate-pulse">
-                  Time Remaining: {Math.floor(remainingTime / 60)}:
-                  {String(remainingTime % 60).padStart(2, "0")}
-                </div>
-              )}
-              {gameStatus === "PLAYING" && !isTimerActive && (
-                <div className="text-lg font-semibold text-gray-500">
-                  Timer: Disabled (Iterative Mode)
-                </div>
-              )}
-
-              <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500 text-center mb-8">
-                {gameStatus === "SETUP"
-                  ? "Ready to Start"
-                  : `Game: ${N} Disks, ${P} Pegs`}
-              </h2>
-
-              {N > 0 && pegs.length > 0 && (
-                <PegsDisplay
-                  pegs={pegs}
-                  P={P}
-                  N={N}
-                  gameStatus={gameStatus}
-                  selectedPeg={selectedPeg}
-                  handlePegClick={handlePegClick}
-                  isAutoSolving={isAutoSolving}
-                />
-              )}
-
-              {["PLAYING", "SOLVING", "WON"].includes(gameStatus) && (
-                <StatusAndSolver
-                  N={N}
-                  P={P}
-                  moveCount={moveCount}
-                  optimalMoves={targetMoves}
-                  gameStatus={gameStatus}
-                  currentMoveIndex={currentMoveIndex}
-                  solutionMoves={solutionMoves}
-                  generateSolution={generateSolution}
-                  isAutoSolving={isAutoSolving}
-                />
-              )}
-
-              {/* Restart / New Game Button */}
-              {gameState !== "welcome" && (
+          {/* Game Board & Status */}
+          <div className="p-6 bg-gray-900 rounded-3xl shadow-2xl border border-gray-800 w-full max-w-lg mx-auto space-y-6">
+            {/* Game Won */}
+            {gameStatus === "WON" && (
+              <div className="p-4 bg-green-900/60 rounded-2xl shadow-inner text-center space-y-3">
+                {resultMessage && (
+                  <div className="text-xl font-bold text-red-400">
+                    {resultMessage}
+                  </div>
+                )}
+                <p className="text-xl font-extrabold text-green-400 tracking-wide">
+                  GAME WON!
+                </p>
+                <p className="text-sm text-green-200">
+                  Score submitted to leaderboard.
+                </p>
                 <div className="mt-6 flex justify-center">
                   <button
                     onClick={resetGame}
                     className="px-8 py-3 rounded-2xl bg-gradient-to-r from-red-500 to-pink-600 text-white font-bold text-lg shadow-lg hover:scale-105 transform transition-transform duration-300"
                   >
-                    🔄 Restart / New Game
+                    Start New Game
                   </button>
                 </div>
-              )}
-              
-            </div>
+              </div>
+            )}
 
-            <Leaderboard
-              leaderboard={leaderboard}
-              isLoading={isLoading}
-              apiError={apiError}
-            />
+            {/* Timer */}
+            {shouldShowTimer && remainingTime != null && (
+              <div className="text-lg text-center font-semibold text-yellow-400 animate-pulse">
+                Time Remaining: {Math.floor(remainingTime / 60)}:
+                {String(remainingTime % 60).padStart(2, "0")}
+                {isAutoSolving && " (Auto-solver)"}
+              </div>
+            )}
+            {gameStatus === "PLAYING" && !isTimerActive && (
+              <div className="text-lg font-semibold text-gray-500">
+                Timer: Disabled (Iterative Mode)
+              </div>
+            )}
+
+            {/* Game Info */}
+            <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500 text-center">
+              {gameStatus === "SETUP"
+                ? "Ready to Start"
+                : `Game: ${N} Disks, ${P} Pegs`}
+            </h2>
+
+            {/* Peg Display */}
+            {N > 0 && pegs.length > 0 && (
+              <PegsDisplay
+                pegs={pegs}
+                P={P}
+                N={N}
+                gameStatus={gameStatus}
+                selectedPeg={selectedPeg}
+                handlePegClick={handlePegClick}
+                isAutoSolving={isAutoSolving}
+              />
+            )}
+
+            {/* Moves */}
+            {["WON", "SOLVING", "PLAYING"].includes(gameStatus) && (
+              <div className="p-4 bg-black/20 rounded-2xl overflow-auto max-h-64">
+                <h3 className="text-lg font-bold text-yellow-300 mb-2 text-center">
+                  Moves
+                </h3>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {(isAutoSolving ? optimalMovesList : userMovesList).map(
+                    (m, i) => (
+                      <span
+                        key={i}
+                        className={`px-2 py-1 rounded-md bg-indigo-600/40 text-sm ${
+                          isAutoSolving && i === currentMoveIndex
+                            ? "bg-green-500/70"
+                            : ""
+                        }`}
+                      >
+                        ({m.from} → {m.to})
+                      </span>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Moves Card */}
+            {gameStatus === "WON" && (
+              <MovesCard
+                userMoves={moveCount}
+                optimalMoves={targetMoves}
+                isOptimal={moveCount === targetMoves}
+                mode="MANUAL"
+              />
+            )}
+
+            {/* Status & Solver Panel */}
+            {["PLAYING", "SOLVING"].includes(gameStatus) && (
+              <StatusAndSolver
+                N={N}
+                P={P}
+                moveCount={moveCount}
+                optimalMoves={targetMoves}
+                gameStatus={gameStatus}
+                currentMoveIndex={currentMoveIndex}
+                solutionMoves={solutionMoves}
+                generateSolution={generateSolution}
+                isAutoSolving={isAutoSolving}
+              />
+            )}
+
+            {/* Reset Button */}
+            <div className="mt-6 flex justify-center">
+              <button
+                onClick={resetGame}
+                className="px-8 py-3 rounded-2xl bg-gradient-to-r from-red-500 to-pink-600 text-white font-bold text-lg shadow-lg hover:scale-105 transform transition-transform duration-300"
+              >
+                🔄 Reset
+              </button>
+            </div>
           </div>
-        </>
+
+          {/* Leaderboard */}
+          <Leaderboard
+            leaderboard={leaderboard}
+            isLoading={isLoading}
+            apiError={apiError}
+          />
+        </div>
       )}
     </div>
   );
 };
-
 export default Page;
