@@ -26,6 +26,7 @@ const DEFAULT_RANDOM_DISKS = 5;
 
 const Page = () => {
   /* -------------------- STATES -------------------- */
+  const [solverTimeMs, setSolverTimeMs] = useState(null);
   const [N, setN] = useState(DEFAULT_RANDOM_DISKS);
   const [P, setP] = useState(3);
   const [pegs, setPegs] = useState([]);
@@ -187,6 +188,9 @@ const Page = () => {
       (p === 3 && selectedAlgorithm3P === ALGORITHM_OPTIONS_3P.RECURSIVE) ||
       (p === 4 && selectedAlgorithm4P === ALGORITHM_OPTIONS_4P.FRAME_STEWART);
 
+    // ✅ START performance measurement
+    const startPerf = performance.now();
+
     if (p === 3) {
       strict
         ? solveHanoi3PegsRecursive(n, 0, p - 1, 1, moves)
@@ -196,6 +200,9 @@ const Page = () => {
         ? solveHanoi4PegsFrameStewart(n, 0, p - 1, [1, 2], moves)
         : solveHanoi4PegsIterative(n, 0, p - 1, [1, 2], moves);
     }
+    // ✅ END performance measurement
+    const endPerf = performance.now();
+    setSolverTimeMs(endPerf - startPerf);
 
     setN(n);
     setP(p);
@@ -274,6 +281,7 @@ const Page = () => {
       target_moves: targetMoves,
       is_optimal: moveCount === targetMoves,
       time_taken_ms: Date.now() - startTime,
+      solver_time_ms: solverTimeMs,
     };
 
     (async () => {
@@ -516,9 +524,14 @@ const Page = () => {
                 solutionMoves={solutionMoves}
                 generateSolution={generateSolution}
                 isAutoSolving={isAutoSolving}
+                solverTimeMs={solverTimeMs}
               />
             )}
-
+            {gameStatus === "WON" && solverTimeMs != null && (
+              <div className="text-sm text-cyan-400 text-center mt-2">
+                Solver Execution Time: {solverTimeMs.toFixed(2)} ms
+              </div>
+            )}
             {/* Reset Button */}
             <div className="mt-6 flex justify-center">
               <button

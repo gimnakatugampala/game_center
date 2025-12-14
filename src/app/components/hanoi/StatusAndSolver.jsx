@@ -12,8 +12,7 @@ const StatusAndSolver = ({
   solutionMoves,
   generateSolution,
   isAutoSolving,
-  autoPlaySpeed,
-  setAutoPlaySpeed,
+  solverTimeMs,
 }) => {
   const progressPercent =
     solutionMoves.length > 0
@@ -45,7 +44,7 @@ const StatusAndSolver = ({
           <p className="text-2xl font-bold text-yellow-400">{moveCount}</p>
         </div>
       </div>
-
+  
       {/* Optimal Moves */}
       <div className="bg-gray-800/70 p-4 rounded-2xl shadow-md flex flex-col items-center justify-center transition-transform transform hover:scale-105">
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
